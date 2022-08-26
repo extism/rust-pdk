@@ -11,11 +11,10 @@ extern "C" {
     pub fn extism_load_u32(offs: u64) -> u32;
     pub fn extism_store_u64(offs: u64, data: u64);
     pub fn extism_load_u64(offs: u64) -> u64;
-    pub fn extism_file_read(fd: i32) -> u64;
-    pub fn extism_file_write(fd: i32, offs: u64);
     pub fn extism_config_get(offs: u64) -> u64;
-    pub fn extism_kv_get(offs: u64) -> u64;
-    pub fn extism_kv_set(offs: u64, offs1: u64);
+    pub fn extism_var_get(offs: u64) -> u64;
+    pub fn extism_var_set(offs: u64, offs1: u64);
+    pub fn extism_http_request(req: u64, body: u64) -> u64;
 }
 
 /// # Safety

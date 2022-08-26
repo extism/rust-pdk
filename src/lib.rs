@@ -15,11 +15,22 @@ impl Default for Host {
 pub struct Vars<'a>(&'a Host);
 
 pub struct Memory {
-    pub offset: u64,
-    pub length: u64,
+    should_free: bool,
+    offset: u64,
+    length: u64,
 }
 
 impl Memory {
+    pub fn new(length: usize, should_free: bool) -> Memory {
+        let length = length as u64;
+        let offset = unsafe { extism_alloc(length) };
+        Memory {
+            offset,
+            length,
+            should_free,
+        }
+    }
+
     pub fn load(&self, mut buf: impl AsMut<[u8]>) {
         let buf = buf.as_mut();
         unsafe { extism_load(self.offset, &mut buf[0..self.length as usize]) }
@@ -33,7 +44,9 @@ impl Memory {
 
 impl Drop for Memory {
     fn drop(&mut self) {
-        unsafe { extism_free(self.offset) }
+        if self.should_free {
+            unsafe { extism_free(self.offset) }
+        }
     }
 }
 
@@ -45,7 +58,7 @@ impl<'a> Vars<'a> {
     pub fn get(&self, key: impl AsRef<str>) -> Option<Vec<u8>> {
         let mem = self.0.alloc_bytes(key.as_ref().as_bytes());
 
-        let offset = unsafe { extism_kv_get(mem.offset) };
+        let offset = unsafe { extism_var_get(mem.offset) };
         let len = unsafe { extism_length(offset) };
 
         if offset == 0 || len == 0 {
@@ -62,12 +75,12 @@ impl<'a> Vars<'a> {
     pub fn set(&mut self, key: impl AsRef<str>, val: impl AsRef<[u8]>) {
         let key = self.0.alloc_bytes(key.as_ref().as_bytes());
         let val = self.0.alloc_bytes(val.as_ref());
-        unsafe { extism_kv_set(key.offset, val.offset) }
+        unsafe { extism_var_set(key.offset, val.offset) }
     }
 
     pub fn remove(&mut self, key: impl AsRef<str>) {
         let key = self.0.alloc_bytes(key.as_ref().as_bytes());
-        unsafe { extism_kv_set(key.offset, 0) }
+        unsafe { extism_var_set(key.offset, 0) }
     }
 }
 
@@ -83,16 +96,15 @@ impl Host {
     }
 
     pub fn alloc(&self, length: usize) -> Memory {
-        let length = length as u64;
-        let offset = unsafe { extism_alloc(length) };
-        Memory { offset, length }
+        Memory::new(length, true)
     }
 
     pub fn alloc_bytes(&self, data: impl AsRef<[u8]>) -> Memory {
         let data = data.as_ref();
-        let length = data.len() as u64;
-        let offset = unsafe { extism_alloc(length) };
-        Memory { offset, length }
+        let length = data.len();
+        let mut memory = Memory::new(length, true);
+        memory.store(data);
+        memory
     }
 
     pub fn input(&self) -> &[u8] {
@@ -101,6 +113,24 @@ impl Host {
 
     pub fn input_str(&self) -> &str {
         unsafe { std::str::from_utf8_unchecked(self.input.as_slice()) }
+    }
+
+    pub fn http_request(
+        &self,
+        req: &extism_manifest::HttpRequest,
+        body: Option<&[u8]>,
+    ) -> Result<Vec<u8>, serde_json::Error> {
+        let enc = serde_json::to_vec(req)?;
+        let req = self.alloc_bytes(&enc);
+        let body = match body {
+            Some(b) => self.alloc_bytes(b).offset,
+            None => 0,
+        };
+        let res = unsafe { extism_http_request(req.offset, body) };
+        let len = unsafe { extism_length(res) };
+        let mut dest = vec![0; len as usize];
+        unsafe { bindings::extism_load(res, &mut dest) };
+        Ok(dest)
     }
 
     pub fn output(&self, data: impl AsRef<[u8]>) {

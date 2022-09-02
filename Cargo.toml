@@ -10,4 +10,4 @@ description = "Extism Plug-in Development Kit (PDK) for Rust"
 
 [dependencies]
 serde_json = "1"
-extism-manifest = {git = "ssh://git@github.com/extism/extism"}
+extism-manifest = { git = "https://github.com/extism/extism" }

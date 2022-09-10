@@ -121,10 +121,7 @@ impl<'a> Vars<'a> {
 impl Host {
     pub fn new() -> Host {
         unsafe {
-            let input_offset = extism_input_offset();
-            let input_length = extism_length(input_offset);
-            let mut input = vec![0; input_length as usize];
-            extism_load(input_offset, &mut input);
+            let input = extism_load_input();
             Host { input }
         }
     }

@@ -4,6 +4,24 @@ mod pointer;
 use bindings::*;
 pub use pointer::Pointer;
 
+#[macro_export]
+macro_rules! unwrap {
+    ($x:expr) => {
+        match $x {
+            Ok(x) => x,
+            Err(e) => {
+                let err = format!("{:?}", e);
+                let mut mem = $crate::Memory::new(err.len(), true);
+                mem.store(err.as_bytes());
+                unsafe {
+                    $crate::bindings::extism_error_set(mem.offset);
+                }
+                return -1;
+            }
+        }
+    };
+}
+
 pub struct Host {
     input: Vec<u8>,
 }
@@ -17,9 +35,9 @@ impl Default for Host {
 pub struct Vars<'a>(&'a Host);
 
 pub struct Memory {
-    should_free: bool,
-    offset: u64,
-    length: u64,
+    pub should_free: bool,
+    pub offset: u64,
+    pub length: u64,
 }
 
 impl Memory {

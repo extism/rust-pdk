@@ -216,4 +216,9 @@ impl Host {
             }
         }
     }
+
+    pub fn log(&self, level: LogLevel, str: &str) {
+        let s = self.alloc_bytes(&str);
+        self.log_memory(level, &s)
+    }
 }

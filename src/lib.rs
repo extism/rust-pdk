@@ -72,17 +72,15 @@ impl<'a> Vars<'a> {
         if offset == 0 {
             return None;
         }
-        let len = unsafe { extism_length(offset) };
+        let length = unsafe { extism_length(offset) };
 
-        if len == 0 {
+        if length == 0 {
             return None;
         }
 
-        let mut buf = vec![0; len as usize];
-        unsafe {
-            extism_load(offset, &mut buf);
-        }
-        Some(Pointer::new(buf, Memory::wrap(len, offset)))
+        let memory = Memory::wrap(offset, length);
+
+        Some(Pointer::vec(memory))
     }
 
     pub fn set(&mut self, key: impl AsRef<str>, val: impl AsRef<[u8]>) {
@@ -146,9 +144,7 @@ impl Host {
         };
         let res = unsafe { extism_http_request(req.offset, body) };
         let len = unsafe { extism_length(res) };
-        let mut dest = vec![0; len as usize];
-        unsafe { bindings::extism_load(res, &mut dest) };
-        Ok(Pointer::new(dest, Memory::wrap(res, len)))
+        Ok(Pointer::vec(Memory::wrap(res, len)))
     }
 
     pub fn output(&self, data: impl AsRef<[u8]>) {
@@ -180,14 +176,7 @@ impl Host {
             return None;
         }
 
-        let mut buf = vec![0; len as usize];
-        unsafe {
-            extism_load(offset, &mut buf);
-            Some(Pointer::new(
-                String::from_utf8_unchecked(buf),
-                Memory::wrap(offset, len),
-            ))
-        }
+        Some(Pointer::string(Memory::wrap(offset, len)))
     }
 
     pub fn vars(&self) -> Vars {

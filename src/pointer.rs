@@ -3,11 +3,20 @@ use crate::*;
 pub struct Pointer<T> {
     value: T,
     memory: Memory,
+    encode_bytes: Box<dyn Fn(&T) -> &[u8]>,
 }
 
 impl<T> Pointer<T> {
-    pub fn new(value: T, memory: Memory) -> Pointer<T> {
-        Pointer { value, memory }
+    pub fn new(
+        value: T,
+        memory: Memory,
+        encode_bytes: impl 'static + Fn(&T) -> &[u8],
+    ) -> Pointer<T> {
+        Pointer {
+            value,
+            memory,
+            encode_bytes: Box::new(encode_bytes),
+        }
     }
 
     pub fn make(free: bool) -> Pointer<T> {
@@ -17,7 +26,9 @@ impl<T> Pointer<T> {
         unsafe {
             let slice = std::slice::from_raw_parts_mut(ptr as *mut _, memory.length as usize);
             extism_load(memory.offset, slice);
-            Pointer::new(x.assume_init(), memory)
+            Pointer::new(x.assume_init(), memory, |x| {
+                std::slice::from_raw_parts(x as *const _ as *const u8, std::mem::size_of::<T>())
+            })
         }
     }
 
@@ -32,6 +43,10 @@ impl<T> Pointer<T> {
     pub fn memory(&self) -> &Memory {
         &self.memory
     }
+
+    pub fn save(&mut self) {
+        self.memory.store((self.encode_bytes)(&self.value))
+    }
 }
 
 impl Pointer<String> {
@@ -39,7 +54,7 @@ impl Pointer<String> {
         let mut buf: Vec<u8> = vec![0; memory.length as usize];
         unsafe { extism_load(memory.offset, &mut buf) };
         let str = unsafe { String::from_utf8_unchecked(buf) };
-        Pointer::new(str, memory)
+        Pointer::new(str, memory, |x| x.as_bytes())
     }
 }
 
@@ -51,7 +66,9 @@ impl<T: Default + Clone> Pointer<Vec<T>> {
                 std::slice::from_raw_parts_mut(buf.as_mut_ptr() as *mut _, memory.length as usize);
             extism_load(memory.offset, &mut slice);
         }
-        Pointer::new(buf, memory)
+        Pointer::new(buf, memory, |x| unsafe {
+            std::slice::from_raw_parts(x.as_ptr() as *const u8, x.len() * std::mem::size_of::<T>())
+        })
     }
 }
 

@@ -95,3 +95,15 @@ impl AsMut<[u8]> for Pointer<Vec<u8>> {
         &mut self.value
     }
 }
+
+impl From<Memory> for Pointer<String> {
+    fn from(mem: Memory) -> Self {
+        Pointer::string(mem)
+    }
+}
+
+impl<T: Default + Clone> From<Memory> for Pointer<Vec<T>> {
+    fn from(mem: Memory) -> Self {
+        Pointer::vec(mem)
+    }
+}

@@ -17,6 +17,10 @@ extern "C" {
     pub fn extism_var_get(offs: u64) -> u64;
     pub fn extism_var_set(offs: u64, offs1: u64);
     pub fn extism_http_request(req: u64, body: u64) -> u64;
+    pub fn extism_log_info(offs: u64);
+    pub fn extism_log_debug(offs: u64);
+    pub fn extism_log_warn(offs: u64);
+    pub fn extism_log_error(offs: u64);
 }
 
 /// # Safety

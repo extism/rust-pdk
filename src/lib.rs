@@ -22,6 +22,14 @@ macro_rules! unwrap {
     };
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum LogLevel {
+    Info,
+    Debug,
+    Warn,
+    Error,
+}
+
 pub struct Host {
     input: Vec<u8>,
 }
@@ -196,5 +204,16 @@ impl Host {
 
     pub fn vars(&self) -> Vars {
         Vars::new(self)
+    }
+
+    pub fn log_memory(&self, level: LogLevel, memory: &Memory) {
+        unsafe {
+            match level {
+                LogLevel::Info => extism_log_info(memory.offset),
+                LogLevel::Debug => extism_log_debug(memory.offset),
+                LogLevel::Warn => extism_log_warn(memory.offset),
+                LogLevel::Error => extism_log_error(memory.offset),
+            }
+        }
     }
 }

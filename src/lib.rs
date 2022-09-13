@@ -1,6 +1,34 @@
 pub mod bindings;
+mod pointer;
 
 use bindings::*;
+pub use pointer::Pointer;
+
+#[macro_export]
+macro_rules! unwrap {
+    ($x:expr) => {
+        match $x {
+            Ok(x) => x,
+            Err(e) => {
+                let err = format!("{:?}", e);
+                let mut mem = $crate::Memory::new(err.len(), true);
+                mem.store(err.as_bytes());
+                unsafe {
+                    $crate::bindings::extism_error_set(mem.offset);
+                }
+                return -1;
+            }
+        }
+    };
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum LogLevel {
+    Info,
+    Debug,
+    Warn,
+    Error,
+}
 
 pub struct Host {
     input: Vec<u8>,
@@ -15,9 +43,9 @@ impl Default for Host {
 pub struct Vars<'a>(&'a Host);
 
 pub struct Memory {
-    should_free: bool,
-    offset: u64,
-    length: u64,
+    pub should_free: bool,
+    pub offset: u64,
+    pub length: u64,
 }
 
 impl Memory {
@@ -28,6 +56,14 @@ impl Memory {
             offset,
             length,
             should_free,
+        }
+    }
+
+    pub fn wrap(offset: u64, length: u64) -> Memory {
+        Memory {
+            length,
+            offset,
+            should_free: false,
         }
     }
 
@@ -55,26 +91,32 @@ impl<'a> Vars<'a> {
         Vars(host)
     }
 
-    pub fn get(&self, key: impl AsRef<str>) -> Option<Vec<u8>> {
+    pub fn get(&self, key: impl AsRef<str>) -> Option<Pointer<Vec<u8>>> {
         let mem = self.0.alloc_bytes(key.as_ref().as_bytes());
 
         let offset = unsafe { extism_var_get(mem.offset) };
-        let len = unsafe { extism_length(offset) };
+        if offset == 0 {
+            return None;
+        }
+        let length = unsafe { extism_length(offset) };
 
-        if offset == 0 || len == 0 {
+        if length == 0 {
             return None;
         }
 
-        let mut buf = vec![0; len as usize];
-        unsafe {
-            extism_load(offset, &mut buf);
-        }
-        Some(buf)
+        let memory = Memory::wrap(offset, length);
+
+        Some(Pointer::vec(memory))
     }
 
     pub fn set(&mut self, key: impl AsRef<str>, val: impl AsRef<[u8]>) {
         let key = self.0.alloc_bytes(key.as_ref().as_bytes());
         let val = self.0.alloc_bytes(val.as_ref());
+        unsafe { extism_var_set(key.offset, val.offset) }
+    }
+
+    pub fn set_memory(&mut self, key: impl AsRef<str>, val: &Memory) {
+        let key = self.0.alloc_bytes(key.as_ref().as_bytes());
         unsafe { extism_var_set(key.offset, val.offset) }
     }
 
@@ -87,10 +129,7 @@ impl<'a> Vars<'a> {
 impl Host {
     pub fn new() -> Host {
         unsafe {
-            let input_offset = extism_input_offset();
-            let input_length = extism_length(input_offset);
-            let mut input = vec![0; input_length as usize];
-            extism_load(input_offset, &mut input);
+            let input = extism_load_input();
             Host { input }
         }
     }
@@ -119,7 +158,7 @@ impl Host {
         &self,
         req: &extism_manifest::HttpRequest,
         body: Option<&[u8]>,
-    ) -> Result<Vec<u8>, serde_json::Error> {
+    ) -> Result<Pointer<Vec<u8>>, serde_json::Error> {
         let enc = serde_json::to_vec(req)?;
         let req = self.alloc_bytes(&enc);
         let body = match body {
@@ -128,9 +167,7 @@ impl Host {
         };
         let res = unsafe { extism_http_request(req.offset, body) };
         let len = unsafe { extism_length(res) };
-        let mut dest = vec![0; len as usize];
-        unsafe { bindings::extism_load(res, &mut dest) };
-        Ok(dest)
+        Ok(Pointer::vec(Memory::wrap(res, len)))
     }
 
     pub fn output(&self, data: impl AsRef<[u8]>) {
@@ -142,24 +179,46 @@ impl Host {
         }
     }
 
-    pub fn config(&self, key: impl AsRef<str>) -> String {
+    pub fn output_memory(&self, memory: &Memory) {
+        unsafe {
+            extism_output_set(memory.offset, memory.length);
+        }
+    }
+
+    pub fn config(&self, key: impl AsRef<str>) -> Option<Pointer<String>> {
         let mem = self.alloc_bytes(key.as_ref().as_bytes());
 
         let offset = unsafe { extism_config_get(mem.offset) };
+        if offset == 0 {
+            return None;
+        }
+
         let len = unsafe { extism_length(offset) };
 
-        if offset == 0 || len == 0 {
-            return String::new();
+        if len == 0 {
+            return None;
         }
 
-        let mut buf = vec![0; len as usize];
-        unsafe {
-            extism_load(offset, &mut buf);
-            String::from_utf8_unchecked(buf)
-        }
+        Some(Pointer::string(Memory::wrap(offset, len)))
     }
 
     pub fn vars(&self) -> Vars {
         Vars::new(self)
+    }
+
+    pub fn log_memory(&self, level: LogLevel, memory: &Memory) {
+        unsafe {
+            match level {
+                LogLevel::Info => extism_log_info(memory.offset),
+                LogLevel::Debug => extism_log_debug(memory.offset),
+                LogLevel::Warn => extism_log_warn(memory.offset),
+                LogLevel::Error => extism_log_error(memory.offset),
+            }
+        }
+    }
+
+    pub fn log(&self, level: LogLevel, str: &str) {
+        let s = self.alloc_bytes(&str);
+        self.log_memory(level, &s)
     }
 }

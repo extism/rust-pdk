@@ -1,5 +1,7 @@
 extern "C" {
-    pub fn extism_input_offset() -> u64;
+    pub fn extism_input_length() -> u64;
+    pub fn extism_input_load_u8(offs: u64) -> u8;
+    pub fn extism_input_load_u64(offs: u64) -> u64;
     pub fn extism_length(offs: u64) -> u64;
     pub fn extism_alloc(length: u64) -> u64;
     pub fn extism_free(offs: u64);
@@ -15,6 +17,10 @@ extern "C" {
     pub fn extism_var_get(offs: u64) -> u64;
     pub fn extism_var_set(offs: u64, offs1: u64);
     pub fn extism_http_request(req: u64, body: u64) -> u64;
+    pub fn extism_log_info(offs: u64);
+    pub fn extism_log_debug(offs: u64);
+    pub fn extism_log_warn(offs: u64);
+    pub fn extism_log_error(offs: u64);
 }
 
 /// # Safety
@@ -38,6 +44,29 @@ pub unsafe fn extism_load(offs: u64, data: &mut [u8]) {
         (ptr as *mut u64).add(index / 8).write(x);
         index += 8;
     }
+}
+
+pub unsafe fn extism_load_input() -> Vec<u8> {
+    let input_length = extism_input_length();
+    let mut data = vec![0; input_length as usize];
+
+    let mut index = 0;
+    let mut left;
+    let len = data.len();
+    while index < len {
+        left = len - index;
+        if left < 8 {
+            data[index] = extism_input_load_u8(index as u64);
+            index += 1;
+            continue;
+        }
+
+        let x = extism_input_load_u64(index as u64);
+        (data.as_mut_ptr() as *mut u64).add(index / 8).write(x);
+        index += 8;
+    }
+
+    data
 }
 
 /// # Safety

@@ -44,6 +44,11 @@ impl<T> Pointer<T> {
         &self.memory
     }
 
+    pub fn keep(mut self) -> Self {
+        self.memory = self.memory.keep();
+        self
+    }
+
     pub fn save(&mut self) {
         self.memory.store((self.encode_bytes)(&self.value))
     }

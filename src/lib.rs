@@ -76,6 +76,11 @@ impl Memory {
         let buf = buf.as_ref();
         unsafe { extism_store(self.offset, &buf[0..self.length as usize]) }
     }
+
+    pub fn keep(mut self) -> Self {
+        self.should_free = false;
+        self
+    }
 }
 
 impl Drop for Memory {

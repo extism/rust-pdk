@@ -1,0 +1,59 @@
+name: CI
+on: [push, pull_request]
+
+jobs:
+  test-example:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        rust:
+          - stable
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ matrix.rust }}
+          override: true
+
+      - name: Install wasm32 target
+        run: rustup target add wasm32-unknown-unknown
+
+      - name: Setup Python env
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.9"
+          check-latest: true
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+
+      - name: Checkout extism/cli
+        uses: actions/checkout@v3
+        with:
+          repository: extism/cli
+          path: cli
+
+      - name: Install Extism & CLI
+        run: |
+          pushd cli
+          pip3 install cffi
+          pip3 install .
+          popd
+
+          extism install git
+
+      - name: Build plugins
+        run: make -B plugins
+
+      - name: Test call command
+        run: |
+          TEST=$(extism call test/code.wasm count_vowels --input "this is a test" --set-config='{"thing": "1", "a": "b"}')
+          echo $TEST | grep '"count": 4'
+          echo $TEST | grep '"config": "1"'
+          echo $TEST | grep '"a": "this is var a"'
+
+          TEST=$(extism call test/http.wasm http_get --input "https://jsonplaceholder.typicode.com/todos/1")
+          echo $TEST | grep '"userId": 1'

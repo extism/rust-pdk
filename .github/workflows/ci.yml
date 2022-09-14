@@ -43,7 +43,7 @@ jobs:
           pip3 install .
           popd
 
-          extism install git
+          extism install latest
 
       - name: Build plugins
         run: make -B plugins

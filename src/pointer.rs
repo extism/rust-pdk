@@ -1,5 +1,7 @@
 use crate::*;
 
+// The `Pointer` type is used to create values from the private plugin memory that
+// are associated with values on the heap/stack
 pub struct Pointer<T> {
     value: T,
     memory: Memory,
@@ -7,11 +9,16 @@ pub struct Pointer<T> {
 }
 
 impl<T> Pointer<T> {
+    /// Create a new pointer from the given value and memory region, the memory length should
+    /// have the same size as `T`
+    ///
+    /// The `encode_bytes` parameter is used to provide a function that can convert `T` back to bytes
     pub fn new(
         value: T,
         memory: Memory,
         encode_bytes: impl 'static + Fn(&T) -> &[u8],
     ) -> Pointer<T> {
+        assert!(std::mem::size_of::<T>() as u64 <= memory.length);
         Pointer {
             value,
             memory,
@@ -19,6 +26,8 @@ impl<T> Pointer<T> {
         }
     }
 
+    /// Allocate a new pointer for the given type, if `free` is `true` then the memory block will
+    /// be freed when this value goes out of scope.
     pub fn make(free: bool) -> Pointer<T> {
         let memory = Memory::new(std::mem::size_of::<T>(), free);
         let mut x = std::mem::MaybeUninit::zeroed();
@@ -32,29 +41,35 @@ impl<T> Pointer<T> {
         }
     }
 
+    /// Get the inner value
     pub fn into_inner(self) -> T {
         self.value
     }
 
+    /// Get the memory offset
     pub fn offset(&self) -> u64 {
         self.memory.offset
     }
 
+    /// Get the memory handle
     pub fn memory(&self) -> &Memory {
         &self.memory
     }
 
+    /// Don't free when dropped
     pub fn keep(mut self) -> Self {
         self.memory = self.memory.keep();
         self
     }
 
+    /// Save value back to the plugin memory
     pub fn save(&mut self) {
         self.memory.store((self.encode_bytes)(&self.value))
     }
 }
 
 impl Pointer<String> {
+    /// Create a pointer to a string
     pub fn string(memory: Memory) -> Pointer<String> {
         let mut buf: Vec<u8> = vec![0; memory.length as usize];
         unsafe { extism_load(memory.offset, &mut buf) };
@@ -64,6 +79,7 @@ impl Pointer<String> {
 }
 
 impl<T: Default + Clone> Pointer<Vec<T>> {
+    /// Create a pointer to a `Vec`
     pub fn vec(memory: Memory) -> Pointer<Vec<T>> {
         let mut buf = vec![Default::default(); memory.length as usize / std::mem::size_of::<T>()];
         unsafe {

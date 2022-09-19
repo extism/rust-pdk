@@ -4,6 +4,7 @@ mod pointer;
 use bindings::*;
 pub use pointer::Pointer;
 
+/// Unwrap a Result from inside a WASM function
 #[macro_export]
 macro_rules! unwrap {
     ($x:expr) => {
@@ -22,6 +23,7 @@ macro_rules! unwrap {
     };
 }
 
+/// Log level
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum LogLevel {
     Info,
@@ -30,6 +32,7 @@ pub enum LogLevel {
     Error,
 }
 
+/// Host stores the input and is used as the context for a plugin function
 pub struct Host {
     input: Vec<u8>,
 }
@@ -40,15 +43,21 @@ impl Default for Host {
     }
 }
 
+/// Vars provides access to plugin variables
 pub struct Vars<'a>(&'a Host);
 
+/// Memory specifies chunks of memory allocated in plugin memory
 pub struct Memory {
+    /// Determines whether the memory should be freed when the value is dropped
     pub should_free: bool,
+    /// Memory offset
     pub offset: u64,
+    /// Memory length
     pub length: u64,
 }
 
 impl Memory {
+    /// Allocate a new block of memory
     pub fn new(length: usize, should_free: bool) -> Memory {
         let length = length as u64;
         let offset = unsafe { extism_alloc(length) };
@@ -59,6 +68,7 @@ impl Memory {
         }
     }
 
+    /// Wrap an existing block of memory
     pub fn wrap(offset: u64, length: u64) -> Memory {
         Memory {
             length,
@@ -67,16 +77,19 @@ impl Memory {
         }
     }
 
+    /// Load a buffer from memory
     pub fn load(&self, mut buf: impl AsMut<[u8]>) {
         let buf = buf.as_mut();
         unsafe { extism_load(self.offset, &mut buf[0..self.length as usize]) }
     }
 
+    /// Store a buffer in memory
     pub fn store(&mut self, buf: impl AsRef<[u8]>) {
         let buf = buf.as_ref();
         unsafe { extism_store(self.offset, &buf[0..self.length as usize]) }
     }
 
+    /// Set `should_free` to `false`
     pub fn keep(mut self) -> Self {
         self.should_free = false;
         self
@@ -92,10 +105,12 @@ impl Drop for Memory {
 }
 
 impl<'a> Vars<'a> {
+    /// Create new `Vars` handle
     pub fn new(host: &'a Host) -> Self {
         Vars(host)
     }
 
+    /// Get a var
     pub fn get(&self, key: impl AsRef<str>) -> Option<Pointer<Vec<u8>>> {
         let mem = self.0.alloc_bytes(key.as_ref().as_bytes());
 
@@ -114,17 +129,20 @@ impl<'a> Vars<'a> {
         Some(Pointer::vec(memory))
     }
 
+    /// Set a var
     pub fn set(&mut self, key: impl AsRef<str>, val: impl AsRef<[u8]>) {
         let key = self.0.alloc_bytes(key.as_ref().as_bytes());
         let val = self.0.alloc_bytes(val.as_ref());
         unsafe { extism_var_set(key.offset, val.offset) }
     }
 
+    /// Set a var using a memory block
     pub fn set_memory(&mut self, key: impl AsRef<str>, val: &Memory) {
         let key = self.0.alloc_bytes(key.as_ref().as_bytes());
         unsafe { extism_var_set(key.offset, val.offset) }
     }
 
+    /// Remove a var
     pub fn remove(&mut self, key: impl AsRef<str>) {
         let key = self.0.alloc_bytes(key.as_ref().as_bytes());
         unsafe { extism_var_set(key.offset, 0) }
@@ -132,6 +150,7 @@ impl<'a> Vars<'a> {
 }
 
 impl Host {
+    /// Create new Host handle
     pub fn new() -> Host {
         unsafe {
             let input = extism_load_input();
@@ -139,10 +158,12 @@ impl Host {
         }
     }
 
+    /// Allocate a memory block of the given length
     pub fn alloc(&self, length: usize) -> Memory {
         Memory::new(length, true)
     }
 
+    /// Allocate a memory block big enough for `data` and copy it
     pub fn alloc_bytes(&self, data: impl AsRef<[u8]>) -> Memory {
         let data = data.as_ref();
         let length = data.len();
@@ -151,14 +172,17 @@ impl Host {
         memory
     }
 
+    /// Get input data
     pub fn input(&self) -> &[u8] {
         self.input.as_slice()
     }
 
+    /// Get input as string
     pub fn input_str(&self) -> &str {
         unsafe { std::str::from_utf8_unchecked(self.input.as_slice()) }
     }
 
+    /// Make HTTP request
     pub fn http_request(
         &self,
         req: &extism_manifest::HttpRequest,
@@ -175,6 +199,7 @@ impl Host {
         Ok(Pointer::vec(Memory::wrap(res, len)))
     }
 
+    /// Set output to the given buffer
     pub fn output(&self, data: impl AsRef<[u8]>) {
         let len = data.as_ref().len();
         unsafe {
@@ -184,12 +209,14 @@ impl Host {
         }
     }
 
+    /// Set output to an existing block of memory
     pub fn output_memory(&self, memory: &Memory) {
         unsafe {
             extism_output_set(memory.offset, memory.length);
         }
     }
 
+    /// Get config value
     pub fn config(&self, key: impl AsRef<str>) -> Option<Pointer<String>> {
         let mem = self.alloc_bytes(key.as_ref().as_bytes());
 
@@ -207,10 +234,12 @@ impl Host {
         Some(Pointer::string(Memory::wrap(offset, len)))
     }
 
+    /// Get a `Vars` handle
     pub fn vars(&self) -> Vars {
         Vars::new(self)
     }
 
+    /// Log existing memory block
     pub fn log_memory(&self, level: LogLevel, memory: &Memory) {
         unsafe {
             match level {
@@ -222,6 +251,7 @@ impl Host {
         }
     }
 
+    /// Log a string
     pub fn log(&self, level: LogLevel, str: &str) {
         let s = self.alloc_bytes(&str);
         self.log_memory(level, &s)

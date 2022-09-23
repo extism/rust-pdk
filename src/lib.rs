@@ -167,10 +167,11 @@ impl Host {
         let enc = serde_json::to_vec(req)?;
         let req = self.alloc_bytes(&enc);
         let body = match body {
-            Some(b) => self.alloc_bytes(b).offset,
-            None => 0,
+            Some(b) => Some(self.alloc_bytes(b)),
+            None => None,
         };
-        let res = unsafe { extism_http_request(req.offset, body) };
+        let data = body.map(|x| x.offset).unwrap_or(0);
+        let res = unsafe { extism_http_request(req.offset, data) };
         let len = unsafe { extism_length(res) };
         Ok(Pointer::vec(Memory::wrap(res, len)))
     }

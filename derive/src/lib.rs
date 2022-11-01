@@ -79,8 +79,8 @@ pub fn encoding(
             }
         }
 
-        impl<T: serde::Serialize> extism_pdk::Output for #name<T> {
-            fn output(&self) -> Result<extism_pdk::Memory, extism_pdk::Error> {
+        impl<T: serde::Serialize> extism_pdk::ToMemory for #name<T> {
+            fn to_memory(&self) -> Result<extism_pdk::Memory, extism_pdk::Error> {
                 let x = #encode(&self.0)?;
                 Ok(extism_pdk::Memory::from_bytes(x))
             }

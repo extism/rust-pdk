@@ -19,17 +19,25 @@ impl HttpResponse {
     pub fn body(&self) -> Vec<u8> {
         self.memory.to_vec()
     }
+
+    pub fn json<T: serde::de::DeserializeOwned>(&self) -> Result<T, Error> {
+        let x = serde_json::from_slice(&self.body())?;
+        Ok(x)
+    }
 }
 
 impl Http {
-    pub fn request(
+    pub fn request<T: ToMemory>(
         &self,
         req: &extism_manifest::HttpRequest,
-        body: Option<&[u8]>,
-    ) -> Result<HttpResponse, serde_json::Error> {
+        body: Option<T>,
+    ) -> Result<HttpResponse, Error> {
         let enc = serde_json::to_vec(req)?;
         let req = Memory::from_bytes(&enc);
-        let body = body.map(Memory::from_bytes);
+        let body = match body {
+            Some(b) => Some(b.to_memory()?),
+            None => None,
+        };
         let data = body.map(|x| x.offset).unwrap_or(0);
         let res = unsafe { extism_http_request(req.offset, data) };
         let len = unsafe { extism_length(res) };

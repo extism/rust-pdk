@@ -5,7 +5,7 @@ mod config;
 mod host;
 mod input;
 mod memory;
-mod output;
+mod to_memory;
 mod vars;
 
 #[cfg(feature = "http")]
@@ -18,7 +18,7 @@ pub use extism_pdk_derive::{encoding, function};
 pub use host::Host;
 pub use input::Input;
 pub use memory::Memory;
-pub use output::Output;
+pub use to_memory::ToMemory;
 pub use vars::Vars;
 
 #[cfg(feature = "http")]

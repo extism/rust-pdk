@@ -1,12 +1,9 @@
 use crate::*;
 
-pub struct Vars<'a>(&'a Host);
+#[derive(Clone, Copy)]
+pub struct Vars;
 
-impl<'a> Vars<'a> {
-    pub(crate) fn new(host: &'a Host) -> Self {
-        Vars(host)
-    }
-
+impl Vars {
     pub fn get_memory(&self, key: impl AsRef<str>) -> Option<Memory> {
         let mem = Memory::from_bytes(key.as_ref().as_bytes());
 

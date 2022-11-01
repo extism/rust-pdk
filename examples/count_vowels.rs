@@ -13,7 +13,7 @@ struct TestOutput {
 }
 
 #[function]
-pub unsafe fn count_vowels(host: &mut Host, input: String) -> PluginResult<Json<TestOutput>> {
+pub unsafe fn count_vowels(input: String) -> PluginResult<Json<TestOutput>> {
     let mut count = 0;
     for ch in input.chars() {
         if VOWELS.contains(&ch) {
@@ -21,12 +21,11 @@ pub unsafe fn count_vowels(host: &mut Host, input: String) -> PluginResult<Json<
         }
     }
 
-    let mut vars = host.vars();
-    vars.set("a", "this is var a");
+    Vars.set("a", "this is var a");
 
-    let a = vars.get("a").expect("variable 'a' set");
+    let a = Vars.get("a").expect("variable 'a' set");
     let a = String::from_utf8(a).expect("string from varible value");
-    let config = host.config("thing").expect("'thing' key set in config");
+    let config = Config.get("thing").expect("'thing' key set in config");
 
     let output = TestOutput { count, config, a };
     Ok(Json(output))

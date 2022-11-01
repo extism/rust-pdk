@@ -26,9 +26,9 @@ pub fn function(
                 #block
             }
 
-            let mut host = extism_pdk::Host::new();
+            let mut host = extism_pdk::Host;
             let input = extism_pdk::unwrap!(host.input());
-            let output = extism_pdk::unwrap!(inner(&mut host, input));
+            let output = extism_pdk::unwrap!(inner(input));
             let output = unwrap!(output.output());
             host.set_output_memory(&output.keep());
             0
@@ -58,6 +58,10 @@ pub fn encoding(
 ) -> proc_macro::TokenStream {
     let item = parse_macro_input!(item as ItemStruct);
     let args = parse_macro_input!(attr as Args);
+
+    if args.arg.len() != 2 {
+        panic!("extism_pdk::encoding expects 2 arguments (encoding function and decoding function) but got {}", args.arg.len())
+    }
 
     let vis = item.vis;
     let name = &item.ident;

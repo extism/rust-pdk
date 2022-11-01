@@ -4,6 +4,12 @@ pub trait Input: Sized {
     fn input(input: Vec<u8>) -> Result<Self, Error>;
 }
 
+impl Input for () {
+    fn input(_input: Vec<u8>) -> Result<Self, Error> {
+        Ok(())
+    }
+}
+
 impl Input for Vec<u8> {
     fn input(input: Vec<u8>) -> Result<Self, Error> {
         Ok(input)

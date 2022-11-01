@@ -3,7 +3,7 @@ macro_rules! log {
     ($lvl:expr, $($arg:tt)+) => {{
         let fmt = format!($($arg)+);
         let memory = $crate::Memory::from_bytes(&fmt);
-        $crate::log_memory($lvl, &memory)
+        memory.log($lvl)
     }}
 }
 
@@ -53,23 +53,16 @@ macro_rules! unwrap {
     };
 }
 
-// #[macro_export]
-// macro_rules! encoding {
-//     ($name:ident, $encode:expr, $decode:expr) => {
-//         pub struct $name<T>(pub T);
+#[macro_export]
+macro_rules! var {
+    ($($arg:tt)+) => {
+        $crate::var::get(&format!($($arg)+))
+    };
+}
 
-//         impl<T: serde::de::DeserializeOwned> $crate::Input for $name<T> {
-//             fn input(d: Vec<u8>) -> Result<Self, $crate::Error> {
-//                 let x = $decode(&d)?;
-//                 Ok($name(x))
-//             }
-//         }
-
-//         impl<T: serde::Serialize> $crate::Output for $name<T> {
-//             fn output(&self) -> Result<$crate::Memory, $crate::Error> {
-//                 let x = $encode(&self.0)?;
-//                 Ok(Memory::from_bytes(x))
-//             }
-//         }
-//     };
-// }
+#[macro_export]
+macro_rules! config {
+    ($key:expr) => {
+        $crate::config::get(&format!($($arg)+))
+    };
+}

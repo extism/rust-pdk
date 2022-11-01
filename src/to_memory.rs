@@ -6,7 +6,7 @@ pub trait ToMemory {
 
 impl ToMemory for Memory {
     fn to_memory(&self) -> Result<Memory, Error> {
-        Ok(Memory::wrap(self.offset, self.length).keep())
+        Ok(Memory::wrap(self.offset, self.length, false))
     }
 }
 

@@ -8,7 +8,7 @@ pub struct Memory {
 
 impl Memory {
     pub fn null() -> Memory {
-        Memory::wrap(0, 0)
+        Memory::wrap(0, 0, false)
     }
 
     pub fn new(length: usize) -> Memory {
@@ -21,11 +21,11 @@ impl Memory {
         }
     }
 
-    pub(crate) fn wrap(offset: u64, length: u64) -> Memory {
+    pub(crate) fn wrap(offset: u64, length: u64, should_free: bool) -> Memory {
         Memory {
             length,
             offset,
-            should_free: false,
+            should_free,
         }
     }
 
@@ -61,6 +61,24 @@ impl Memory {
     pub fn to_string(&self) -> Result<String, Error> {
         let x = String::from_utf8(self.to_vec())?;
         Ok(x)
+    }
+
+    pub fn set_output(mut self) {
+        self = self.keep();
+        unsafe {
+            extism_output_set(self.offset, self.length);
+        }
+    }
+
+    pub fn log(&self, level: LogLevel) {
+        unsafe {
+            match level {
+                LogLevel::Info => extism_log_info(self.offset),
+                LogLevel::Debug => extism_log_debug(self.offset),
+                LogLevel::Warn => extism_log_warn(self.offset),
+                LogLevel::Error => extism_log_error(self.offset),
+            }
+        }
     }
 }
 

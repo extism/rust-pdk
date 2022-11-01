@@ -32,8 +32,7 @@ pub fn function(
 
             let input = extism_pdk::unwrap!(extism_pdk::input());
             let output = extism_pdk::unwrap!(inner(input));
-            let output = extism_pdk::unwrap!(output.to_memory());
-            extism_pdk::set_output_memory(&output.keep());
+            unwrap!(extism_pdk::output(output));
             0
         }
     }
@@ -75,8 +74,8 @@ pub fn encoding(
     quote! {
         #vis struct #name<T>(pub T);
 
-        impl<T: serde::de::DeserializeOwned> extism_pdk::Input for #name<T> {
-            fn input(d: Vec<u8>) -> Result<Self, extism_pdk::Error> {
+        impl<T: serde::de::DeserializeOwned> extism_pdk::FromBytes for #name<T> {
+            fn from_bytes(d: Vec<u8>) -> Result<Self, extism_pdk::Error> {
                 let x = #decode(&d)?;
                 Ok(#name(x))
             }

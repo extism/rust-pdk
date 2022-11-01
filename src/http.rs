@@ -37,6 +37,6 @@ pub fn request<T: ToMemory>(
     let res = unsafe { extism_http_request(req.offset, data) };
     let len = unsafe { extism_length(res) };
     Ok(HttpResponse {
-        memory: Memory::wrap(res, len),
+        memory: Memory::wrap(res, len, true),
     })
 }

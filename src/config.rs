@@ -14,7 +14,7 @@ pub fn get(key: impl AsRef<str>) -> Option<String> {
     }
 
     Some(
-        Memory::wrap(offset, len)
+        Memory::wrap(offset, len, true)
             .to_string()
             .expect("Config value is not a valid string"),
     )

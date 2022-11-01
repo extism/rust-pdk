@@ -9,7 +9,7 @@ pub fn function(
     let function = parse_macro_input!(item as ItemFn);
 
     if !matches!(function.vis, syn::Visibility::Public(..)) {
-        panic!("plugin_fn expects a public function");
+        panic!("extism_pdk::function expects a public function");
     }
 
     let name = &function.sig.ident;
@@ -19,6 +19,10 @@ pub fn function(
     let output = &function.sig.output;
     let block = &function.block;
 
+    if inputs.len() != 1 {
+        panic!("extism_pdk::function expects a function with one argument, `()` may be used if no input is needed");
+    }
+
     quote! {
         #[no_mangle]
         pub #constness #unsafety extern "C" fn #name() -> i32 {
@@ -26,11 +30,10 @@ pub fn function(
                 #block
             }
 
-            let mut host = extism_pdk::Host;
-            let input = extism_pdk::unwrap!(host.input());
+            let input = extism_pdk::unwrap!(extism_pdk::Host.input());
             let output = extism_pdk::unwrap!(inner(input));
             let output = unwrap!(output.to_memory());
-            host.set_output_memory(&output.keep());
+            extism_pdk::Host.set_output_memory(&output.keep());
             0
         }
     }

@@ -5,6 +5,6 @@ use extism_pdk::*;
 #[function]
 pub fn http_get(Json(req): Json<HttpRequest>) -> PluginResult<HttpResponse> {
     info!("Request to: {}", req.url);
-    let res = Http.request::<()>(&req, None)?;
+    let res = http::request::<()>(&req, None)?;
     Ok(res)
 }

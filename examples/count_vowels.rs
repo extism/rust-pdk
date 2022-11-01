@@ -21,11 +21,11 @@ pub unsafe fn count_vowels(input: String) -> PluginResult<Json<TestOutput>> {
         }
     }
 
-    Vars.set("a", "this is var a");
+    var::set("a", "this is var a");
 
-    let a = Vars.get("a").expect("variable 'a' set");
+    let a = var::get("a").expect("variable 'a' set");
     let a = String::from_utf8(a).expect("string from varible value");
-    let config = Config.get("thing").expect("'thing' key set in config");
+    let config = config::get("thing").expect("'thing' key set in config");
 
     let output = TestOutput { count, config, a };
     Ok(Json(output))

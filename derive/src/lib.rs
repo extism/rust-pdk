@@ -30,10 +30,10 @@ pub fn function(
                 #block
             }
 
-            let input = extism_pdk::unwrap!(extism_pdk::Host.input());
+            let input = extism_pdk::unwrap!(extism_pdk::input());
             let output = extism_pdk::unwrap!(inner(input));
-            let output = unwrap!(output.to_memory());
-            extism_pdk::Host.set_output_memory(&output.keep());
+            let output = extism_pdk::unwrap!(output.to_memory());
+            extism_pdk::set_output_memory(&output.keep());
             0
         }
     }

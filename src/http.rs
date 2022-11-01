@@ -1,8 +1,5 @@
 use crate::*;
 
-#[derive(Clone, Copy)]
-pub struct Http;
-
 pub struct HttpResponse {
     memory: Memory,
 }
@@ -26,23 +23,20 @@ impl HttpResponse {
     }
 }
 
-impl Http {
-    pub fn request<T: ToMemory>(
-        &self,
-        req: &extism_manifest::HttpRequest,
-        body: Option<T>,
-    ) -> Result<HttpResponse, Error> {
-        let enc = serde_json::to_vec(req)?;
-        let req = Memory::from_bytes(&enc);
-        let body = match body {
-            Some(b) => Some(b.to_memory()?),
-            None => None,
-        };
-        let data = body.map(|x| x.offset).unwrap_or(0);
-        let res = unsafe { extism_http_request(req.offset, data) };
-        let len = unsafe { extism_length(res) };
-        Ok(HttpResponse {
-            memory: Memory::wrap(res, len),
-        })
-    }
+pub fn request<T: ToMemory>(
+    req: &extism_manifest::HttpRequest,
+    body: Option<T>,
+) -> Result<HttpResponse, Error> {
+    let enc = serde_json::to_vec(req)?;
+    let req = Memory::from_bytes(&enc);
+    let body = match body {
+        Some(b) => Some(b.to_memory()?),
+        None => None,
+    };
+    let data = body.map(|x| x.offset).unwrap_or(0);
+    let res = unsafe { extism_http_request(req.offset, data) };
+    let len = unsafe { extism_length(res) };
+    Ok(HttpResponse {
+        memory: Memory::wrap(res, len),
+    })
 }

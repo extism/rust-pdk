@@ -3,23 +3,7 @@ macro_rules! log {
     ($lvl:expr, $($arg:tt)+) => {{
         let fmt = format!($($arg)+);
         let memory = $crate::Memory::from_bytes(&fmt);
-
-        unsafe {
-            match $lvl {
-                $crate::LogLevel::Info => {
-                    $crate::bindings::extism_log_info(memory.offset);
-                }
-                $crate::LogLevel::Debug => {
-                    $crate::bindings::extism_log_debug(memory.offset);
-                }
-                $crate::LogLevel::Warn => {
-                    $crate::bindings::extism_log_warn(memory.offset);
-                }
-                $crate::LogLevel::Error => {
-                    $crate::bindings::extism_log_error(memory.offset);
-                }
-            }
-        }
+        $crate::log_memory($lvl, &memory)
     }}
 }
 

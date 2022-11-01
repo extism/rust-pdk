@@ -10,6 +10,7 @@ impl Output for Memory {
     }
 }
 
+#[cfg(feature = "http")]
 impl Output for HttpResponse {
     fn output(&self) -> Result<Memory, Error> {
         self.as_memory().output()

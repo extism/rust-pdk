@@ -29,7 +29,7 @@ pub fn function(
             let mut host = extism_pdk::Host;
             let input = extism_pdk::unwrap!(host.input());
             let output = extism_pdk::unwrap!(inner(input));
-            let output = unwrap!(output.output());
+            let output = unwrap!(output.to_memory());
             host.set_output_memory(&output.keep());
             0
         }

@@ -7,16 +7,16 @@ macro_rules! log {
         unsafe {
             match $lvl {
                 $crate::LogLevel::Info => {
-                    extism_log_info(memory.offset);
+                    $crate::bindings::extism_log_info(memory.offset);
                 }
                 $crate::LogLevel::Debug => {
-                    extism_log_debug(memory.offset);
+                    $crate::bindings::extism_log_debug(memory.offset);
                 }
                 $crate::LogLevel::Warn => {
-                    extism_log_warn(memory.offset);
+                    $crate::bindings::extism_log_warn(memory.offset);
                 }
                 $crate::LogLevel::Error => {
-                    extism_log_error(memory.offset);
+                    $crate::bindings::extism_log_error(memory.offset);
                 }
             }
         }

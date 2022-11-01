@@ -2,7 +2,6 @@
 
 use extism_pdk::*;
 use serde::Serialize;
-use serde_json;
 
 const VOWELS: &[char] = &['a', 'A', 'e', 'E', 'i', 'I', 'o', 'O', 'u', 'U'];
 
@@ -13,13 +12,10 @@ struct TestOutput {
     pub a: String,
 }
 
-#[no_mangle]
-unsafe fn count_vowels() -> i32 {
-    let host = Host::new();
-    let s = host.input_str();
-
+#[function]
+pub unsafe fn count_vowels(host: &mut Host, input: String) -> PluginResult<Json<TestOutput>> {
     let mut count = 0;
-    for ch in s.chars() {
+    for ch in input.chars() {
         if VOWELS.contains(&ch) {
             count += 1;
         }
@@ -28,15 +24,10 @@ unsafe fn count_vowels() -> i32 {
     let mut vars = host.vars();
     vars.set("a", "this is var a");
 
-    let a = vars.get("a").expect("variable 'a' set").into_inner();
+    let a = vars.get("a").expect("variable 'a' set");
     let a = String::from_utf8(a).expect("string from varible value");
-    let config = host
-        .config("thing")
-        .expect("'thing' key set in config")
-        .into_inner();
+    let config = host.config("thing").expect("'thing' key set in config");
 
     let output = TestOutput { count, config, a };
-
-    host.output(&serde_json::to_string_pretty(&output).expect("json serialize output"));
-    0
+    Ok(Json(output))
 }

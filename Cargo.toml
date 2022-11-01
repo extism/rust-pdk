@@ -9,6 +9,14 @@ repository = "https://github.com/extism/rust-pdk"
 description = "Extism Plug-in Development Kit (PDK) for Rust"
 
 [dependencies]
+anyhow = "1"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 extism-manifest = "0.0.1-rc.5"
+extism-pdk-derive = {path = "./derive"}
+
+[workspace]
+members = [
+  ".",
+  "derive"
+]

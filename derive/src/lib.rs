@@ -31,7 +31,18 @@ pub fn function(
 
     match output {
         syn::ReturnType::Default => panic!("extism_pdk::function expects a return value"),
-        syn::ReturnType::Type(_, _) => (),
+        syn::ReturnType::Type(_, t) => match t.as_ref() {
+            syn::Type::Path(p) => {
+                if let Some(t) = p.path.segments.last() {
+                    if t.ident != "FuncResult" {
+                        panic!("exctism_pdk::function expects a function that returns extism_pdk::FuncResult");
+                    }
+                } else {
+                    panic!("exctism_pdk::function expects a function that returns extism_pdk::FuncResult");
+                }
+            }
+            _ => (),
+        },
     }
 
     quote! {

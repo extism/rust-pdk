@@ -2,6 +2,10 @@ use crate::*;
 
 pub trait ToMemory {
     fn to_memory(&self) -> Result<Memory, Error>;
+
+    fn status(&self) -> i32 {
+        0
+    }
 }
 
 impl ToMemory for Memory {
@@ -50,5 +54,11 @@ impl ToMemory for &str {
 impl ToMemory for json::Value {
     fn to_memory(&self) -> Result<Memory, Error> {
         Ok(Memory::from_bytes(serde_json::to_vec(self)?))
+    }
+}
+
+impl ToMemory for Base64 {
+    fn to_memory(&self) -> Result<Memory, Error> {
+        base64::encode(&self.0).to_memory()
     }
 }

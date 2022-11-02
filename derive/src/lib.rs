@@ -29,6 +29,11 @@ pub fn function(
         panic!("extism_pdk::function expects a function with one argument, `()` may be used if no input is needed");
     }
 
+    match output {
+        syn::ReturnType::Default => panic!("extism_pdk::function expects a return value"),
+        syn::ReturnType::Type(_, _) => (),
+    }
+
     quote! {
         #[no_mangle]
         pub #constness #unsafety extern "C" fn #name() -> i32 {
@@ -38,6 +43,7 @@ pub fn function(
 
             let input = extism_pdk::unwrap!(extism_pdk::input());
             let output = extism_pdk::unwrap!(inner(input));
+            let status = output.status();
             unwrap!(extism_pdk::output(output));
             0
         }

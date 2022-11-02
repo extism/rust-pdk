@@ -24,7 +24,7 @@ pub use extism_manifest::HttpRequest;
 pub use http::HttpResponse;
 
 /// The return type of a plugin function
-pub type PluginResult<T> = Result<T, Error>;
+pub type PluginResult<T> = Result<T, WithStatus<Error>>;
 
 /// Logging levels
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -43,6 +43,9 @@ use crate as extism_pdk;
 #[encoding(serde_json::to_vec, serde_json::from_slice)]
 pub struct Json;
 
+/// Base64 conversion
+pub struct Base64(pub String);
+
 /// Get input from host
 pub fn input<T: FromBytes>() -> Result<T, Error> {
     unsafe { T::from_bytes(extism_load_input()) }
@@ -52,4 +55,34 @@ pub fn input<T: FromBytes>() -> Result<T, Error> {
 pub fn output(data: impl ToMemory) -> Result<(), Error> {
     data.to_memory()?.set_output();
     Ok(())
+}
+
+pub struct WithStatus<T>(T, i32);
+
+impl<E: Into<Error>> From<E> for WithStatus<Error> {
+    fn from(value: E) -> Self {
+        WithStatus::new(value.into(), -1)
+    }
+}
+
+impl std::fmt::Debug for WithStatus<Error> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.0.fmt(f)
+    }
+}
+
+impl<T: ToMemory> ToMemory for WithStatus<T> {
+    fn to_memory(&self) -> Result<Memory, Error> {
+        self.0.to_memory()
+    }
+
+    fn status(&self) -> i32 {
+        self.1
+    }
+}
+
+impl<T> WithStatus<T> {
+    pub fn new(x: T, status: i32) -> Self {
+        WithStatus(x, status)
+    }
 }

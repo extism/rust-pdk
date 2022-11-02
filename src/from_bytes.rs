@@ -1,7 +1,7 @@
 use crate::*;
 
-pub trait FromBytes: Sized {
-    fn from_bytes(input: Vec<u8>) -> Result<Self, Error>;
+pub trait FromBytes<T = Self>: Sized {
+    fn from_bytes(input: Vec<u8>) -> Result<T, Error>;
 }
 
 impl FromBytes for () {
@@ -27,5 +27,11 @@ impl FromBytes for json::Value {
     fn from_bytes(input: Vec<u8>) -> Result<Self, Error> {
         let j = serde_json::from_slice(&input)?;
         Ok(j)
+    }
+}
+
+impl FromBytes<Vec<u8>> for Base64 {
+    fn from_bytes(input: Vec<u8>) -> Result<Vec<u8>, Error> {
+        Ok(base64::decode(input)?)
     }
 }

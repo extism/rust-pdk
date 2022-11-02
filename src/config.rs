@@ -1,5 +1,6 @@
 use crate::*;
 
+/// Get config key
 pub fn get(key: impl AsRef<str>) -> Option<String> {
     let mem = Memory::from_bytes(key.as_ref().as_bytes());
 

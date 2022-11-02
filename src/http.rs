@@ -1,5 +1,7 @@
 use crate::*;
 
+/// A HttpResponse is used to wrap the memory returned by
+/// `extism_pdx::http::request`
 pub struct HttpResponse {
     memory: Memory,
 }
@@ -23,6 +25,8 @@ impl HttpResponse {
     }
 }
 
+/// Execute `HttpRequest`, if `body` is not `None` then it will be sent as the
+/// request body.
 pub fn request<T: ToMemory>(
     req: &extism_manifest::HttpRequest,
     body: Option<T>,

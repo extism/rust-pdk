@@ -54,15 +54,8 @@ macro_rules! unwrap {
 }
 
 #[macro_export]
-macro_rules! var {
-    ($($arg:tt)+) => {
-        $crate::var::get(&format!($($arg)+))
-    };
-}
-
-#[macro_export]
-macro_rules! config {
-    ($key:expr) => {
-        $crate::config::get(&format!($($arg)+))
+macro_rules! set_var {
+    ($k:expr, $($arg:tt)+) => {
+        $crate::var::set($k, format!($($arg)+))
     };
 }

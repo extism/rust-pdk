@@ -21,7 +21,7 @@ pub unsafe fn count_vowels(input: String) -> PluginResult<Json<TestOutput>> {
         }
     }
 
-    var::set("a", "this is var a")?;
+    set_var!("a", "this is var a")?;
 
     let a = var::get("a")?.expect("variable 'a' set");
     let a = String::from_utf8(a).expect("string from varible value");

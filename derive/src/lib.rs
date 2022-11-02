@@ -1,6 +1,12 @@
 use quote::quote;
 use syn::{parse_macro_input, ItemFn, ItemStruct};
 
+/// `function` is used to define a function that will be exported by a plugin
+///
+/// It should be added to a function you would like to export, the function should
+/// accept a parameter that implements `extism_pdk::FromBytes` and return a
+/// `extism_pdk::PluginResult` that contains a value that implements
+/// `extism_pdk::ToMemory`.
 #[proc_macro_attribute]
 pub fn function(
     _attr: proc_macro::TokenStream,
@@ -53,6 +59,14 @@ impl syn::parse::Parse for Args {
     }
 }
 
+/// `encoding` is used to add a new serde encoder/decoder. It accepts two parameters:
+/// 1) path to serialization function
+/// 2) path to deserialization function
+///
+/// ```rust,ignore
+/// #[encoding(serde_json::to_vec, serde_json::from_slice)]]
+/// pub struct Json;
+/// ```
 #[proc_macro_attribute]
 pub fn encoding(
     attr: proc_macro::TokenStream,

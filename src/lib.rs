@@ -23,8 +23,10 @@ pub use extism_manifest::HttpRequest;
 #[cfg(feature = "http")]
 pub use http::HttpResponse;
 
+/// The return type of a plugin function
 pub type PluginResult<T> = Result<T, Error>;
 
+/// Logging levels
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum LogLevel {
     Info,
@@ -33,16 +35,20 @@ pub enum LogLevel {
     Error,
 }
 
+/// Re-export of `serde_json`
 pub use serde_json as json;
 
 use crate as extism_pdk;
+/// JSON encoding
 #[encoding(serde_json::to_vec, serde_json::from_slice)]
 pub struct Json;
 
+/// Get input from host
 pub fn input<T: FromBytes>() -> Result<T, Error> {
     unsafe { T::from_bytes(extism_load_input()) }
 }
 
+/// Set output for host
 pub fn output(data: impl ToMemory) -> Result<(), Error> {
     data.to_memory()?.set_output();
     Ok(())

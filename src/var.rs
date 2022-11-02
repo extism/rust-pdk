@@ -13,11 +13,7 @@ pub fn get_memory(key: impl AsRef<str>) -> Option<Memory> {
         return None;
     }
 
-    let memory = Memory {
-        should_free: true,
-        offset,
-        length,
-    };
+    let memory = Memory::wrap(offset, length, true);
     Some(memory)
 }
 

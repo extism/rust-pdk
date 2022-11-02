@@ -13,7 +13,7 @@ struct TestOutput {
 }
 
 #[function]
-pub unsafe fn count_vowels(input: String) -> PluginResult<Json<TestOutput>> {
+pub unsafe fn count_vowels(input: String) -> FuncResult<Json<TestOutput>> {
     let mut count = 0;
     for ch in input.chars() {
         if VOWELS.contains(&ch) {

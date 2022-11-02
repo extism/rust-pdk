@@ -24,7 +24,7 @@ pub use extism_manifest::HttpRequest;
 pub use http::HttpResponse;
 
 /// The return type of a plugin function
-pub type PluginResult<T> = Result<T, WithStatus<Error>>;
+pub type FuncResult<T> = Result<T, WithStatus<Error>>;
 
 /// Logging levels
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

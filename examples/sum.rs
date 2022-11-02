@@ -14,7 +14,7 @@ struct Sum {
 }
 
 #[function]
-pub fn add(Json(add): Json<Add>) -> PluginResult<Json<Sum>> {
+pub fn add(Json(add): Json<Add>) -> FuncResult<Json<Sum>> {
     let sum = Sum { sum: add.a + add.b };
     Ok(Json(sum))
 }

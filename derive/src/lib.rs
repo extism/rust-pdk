@@ -5,7 +5,7 @@ use syn::{parse_macro_input, ItemFn, ItemStruct};
 ///
 /// It should be added to a function you would like to export, the function should
 /// accept a parameter that implements `extism_pdk::FromBytes` and return a
-/// `extism_pdk::PluginResult` that contains a value that implements
+/// `extism_pdk::FuncResult` that contains a value that implements
 /// `extism_pdk::ToMemory`.
 #[proc_macro_attribute]
 pub fn function(

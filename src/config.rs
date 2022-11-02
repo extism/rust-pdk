@@ -1,7 +1,6 @@
 use crate::*;
 
-/// Get config key
-pub fn get(key: impl AsRef<str>) -> Option<String> {
+pub fn get_memory(key: impl AsRef<str>) -> Option<Memory> {
     let mem = Memory::from_bytes(key.as_ref().as_bytes());
 
     let offset = unsafe { extism_config_get(mem.offset) };
@@ -14,9 +13,9 @@ pub fn get(key: impl AsRef<str>) -> Option<String> {
         return None;
     }
 
-    Some(
-        Memory::wrap(offset, len, true)
-            .to_string()
-            .expect("Config value is not a valid string"),
-    )
+    Some(Memory::wrap(offset, len, true))
+}
+
+pub fn get(key: impl AsRef<str>) -> Option<String> {
+    get_memory(key).map(|x| x.to_string().expect("Config value is not a valid string"))
 }

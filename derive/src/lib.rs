@@ -35,10 +35,10 @@ pub fn function(
             syn::Type::Path(p) => {
                 if let Some(t) = p.path.segments.last() {
                     if t.ident != "FuncResult" {
-                        panic!("exctism_pdk::function expects a function that returns extism_pdk::FuncResult");
+                        panic!("extism_pdk::function expects a function that returns extism_pdk::FuncResult");
                     }
                 } else {
-                    panic!("exctism_pdk::function expects a function that returns extism_pdk::FuncResult");
+                    panic!("extism_pdk::function expects a function that returns extism_pdk::FuncResult");
                 }
             }
             _ => (),

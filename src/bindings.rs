@@ -46,6 +46,9 @@ pub unsafe fn extism_load(offs: u64, data: &mut [u8]) {
     }
 }
 
+/// # Safety
+///
+/// This function is used to access WASM memory
 pub unsafe fn extism_load_input() -> Vec<u8> {
     let input_length = extism_input_length();
     let mut data = vec![0; input_length as usize];

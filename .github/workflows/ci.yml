@@ -1,5 +1,5 @@
 name: CI
-on: [push, pull_request]
+on: [pull_request, workflow_dispatch]
 
 jobs:
   test-example:
@@ -51,9 +51,9 @@ jobs:
       - name: Test call command
         run: |
           TEST=$(extism call test/code.wasm count_vowels --input "this is a test" --set-config='{"thing": "1", "a": "b"}')
-          echo $TEST | grep '"count": 4'
-          echo $TEST | grep '"config": "1"'
-          echo $TEST | grep '"a": "this is var a"'
+          echo $TEST | grep '"count":4'
+          echo $TEST | grep '"config":"1"'
+          echo $TEST | grep '"a":"this is var a"'
 
-          TEST=$(extism call test/http.wasm http_get --input "https://jsonplaceholder.typicode.com/todos/1")
+          TEST=$(extism call test/http.wasm http_get --input '{"url": "https://jsonplaceholder.typicode.com/todos/1"}')
           echo $TEST | grep '"userId": 1'

@@ -12,7 +12,7 @@ description = "Extism Plug-in Development Kit (PDK) for Rust"
 anyhow = "1"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-extism-pdk-derive = {path = "./derive"}
+extism-pdk-derive = {version = "0.0.1-rc.1"}
 extism-manifest = {version = "0.0.1-rc.5", optional = true}
 base64 = "0.20.0-alpha.1"
 [features]

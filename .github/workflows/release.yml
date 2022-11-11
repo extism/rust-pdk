@@ -22,6 +22,7 @@ jobs:
           target: ${{ matrix.target }}
 
       - name: Release Derive crate
+        continue-on-error: true
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_API_TOKEN }}
         run: cd derive && cargo publish

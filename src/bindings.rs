@@ -9,8 +9,6 @@ extern "C" {
     pub fn extism_error_set(offs: u64);
     pub fn extism_store_u8(offs: u64, data: u8);
     pub fn extism_load_u8(offs: u64) -> u8;
-    pub fn extism_store_u32(offs: u64, data: u32);
-    pub fn extism_load_u32(offs: u64) -> u32;
     pub fn extism_store_u64(offs: u64, data: u64);
     pub fn extism_load_u64(offs: u64) -> u64;
     pub fn extism_config_get(offs: u64) -> u64;

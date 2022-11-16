@@ -19,7 +19,7 @@ jobs:
           toolchain: stable
           profile: minimal
           override: true
-          target: ${{ matrix.target }}
+          target: wasm32-unknown-unknown
 
       - name: Release Rust Host SDK
         env:

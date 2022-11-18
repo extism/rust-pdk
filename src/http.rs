@@ -4,11 +4,16 @@ use crate::*;
 /// `extism_pdx::http::request`
 pub struct HttpResponse {
     memory: Memory,
+    status: u16,
 }
 
 impl HttpResponse {
     pub fn into_memory(self) -> Memory {
         self.memory
+    }
+
+    pub fn status_code(&self) -> u16 {
+        self.status
     }
 
     pub fn as_memory(&self) -> &Memory {
@@ -38,9 +43,11 @@ pub fn request<T: ToMemory>(
         None => None,
     };
     let data = body.map(|x| x.offset).unwrap_or(0);
-    let res = unsafe { extism_http_request(req.offset, data) };
-    let len = unsafe { extism_length(res) };
+    let offs = unsafe { extism_http_request(req.offset, data) };
+    let status = unsafe { extism_http_status_code() };
+    let len = unsafe { extism_length(offs) };
     Ok(HttpResponse {
-        memory: Memory::wrap(res, len, true),
+        memory: Memory::wrap(offs, len, true),
+        status: status as u16,
     })
 }

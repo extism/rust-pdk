@@ -1,44 +1,46 @@
 use quote::quote;
 use syn::{parse_macro_input, ItemFn, ItemStruct};
 
-/// `function` is used to define a function that will be exported by a plugin
+/// `plugin_fn` is used to define a function that will be exported by a plugin
 ///
 /// It should be added to a function you would like to export, the function should
 /// accept a parameter that implements `extism_pdk::FromBytes` and return a
-/// `extism_pdk::FuncResult` that contains a value that implements
+/// `extism_pdk::FnResult` that contains a value that implements
 /// `extism_pdk::ToMemory`.
 #[proc_macro_attribute]
-pub fn function(
+pub fn plugin_fn(
     _attr: proc_macro::TokenStream,
     item: proc_macro::TokenStream,
 ) -> proc_macro::TokenStream {
-    let function = parse_macro_input!(item as ItemFn);
+    let mut function = parse_macro_input!(item as ItemFn);
 
     if !matches!(function.vis, syn::Visibility::Public(..)) {
-        panic!("extism_pdk::function expects a public function");
+        panic!("extism_pdk::plugin_fn expects a public function");
     }
 
     let name = &function.sig.ident;
     let constness = &function.sig.constness;
     let unsafety = &function.sig.unsafety;
-    let inputs = &function.sig.inputs;
-    let output = &function.sig.output;
+    let inputs = &mut function.sig.inputs;
+    let output = &mut function.sig.output;
     let block = &function.block;
 
-    if inputs.len() != 1 {
-        panic!("extism_pdk::function expects a function with one argument, `()` may be used if no input is needed");
+    if inputs.is_empty() {
+        panic!("extism_pdk::plugin_fn expects a function with one argument, `()` may be used if no input is needed");
     }
 
     match output {
-        syn::ReturnType::Default => panic!("extism_pdk::function expects a return value"),
+        syn::ReturnType::Default => panic!(
+            "extism_pdk::plugin_fn expects a return value, `()` may be used if no output is needed"
+        ),
         syn::ReturnType::Type(_, t) => match t.as_ref() {
             syn::Type::Path(p) => {
                 if let Some(t) = p.path.segments.last() {
-                    if t.ident != "FuncResult" {
-                        panic!("extism_pdk::function expects a function that returns extism_pdk::FuncResult");
+                    if t.ident != "FnResult" {
+                        panic!("extism_pdk::plugin_fn expects a function that returns extism_pdk::FnResult");
                     }
                 } else {
-                    panic!("extism_pdk::function expects a function that returns extism_pdk::FuncResult");
+                    panic!("extism_pdk::plugin_fn expects a function that returns extism_pdk::FnResult");
                 }
             }
             _ => (),

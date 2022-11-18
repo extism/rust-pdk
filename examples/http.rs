@@ -2,8 +2,8 @@
 
 use extism_pdk::*;
 
-#[function]
-pub fn http_get(Json(req): Json<HttpRequest>) -> FuncResult<HttpResponse> {
+#[plugin_fn]
+pub fn http_get(Json(req): Json<HttpRequest>) -> FnResult<HttpResponse> {
     info!("Request to: {}", req.url);
     let res = http::request::<()>(&req, None)?;
     Ok(res)

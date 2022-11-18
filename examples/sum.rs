@@ -13,8 +13,8 @@ struct Sum {
     sum: u32,
 }
 
-#[function]
-pub fn add(Json(add): Json<Add>) -> FuncResult<Json<Sum>> {
+#[plugin_fn]
+pub fn add(Json(add): Json<Add>) -> FnResult<Json<Sum>> {
     let sum = Sum { sum: add.a + add.b };
     Ok(Json(sum))
 }

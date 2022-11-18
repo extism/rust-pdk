@@ -12,7 +12,7 @@ pub mod http;
 
 pub use anyhow::Error;
 pub(crate) use bindings::*;
-pub use extism_pdk_derive::{encoding, function};
+pub use extism_pdk_derive::{encoding, plugin_fn};
 pub use from_bytes::FromBytes;
 pub use memory::Memory;
 pub use to_memory::ToMemory;
@@ -24,7 +24,7 @@ pub use extism_manifest::HttpRequest;
 pub use http::HttpResponse;
 
 /// The return type of a plugin function
-pub type FuncResult<T> = Result<T, WithReturnCode<Error>>;
+pub type FnResult<T> = Result<T, WithReturnCode<Error>>;
 
 /// Logging levels
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

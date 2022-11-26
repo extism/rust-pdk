@@ -21,6 +21,7 @@ pub fn plugin_fn(
     let name = &function.sig.ident;
     let constness = &function.sig.constness;
     let unsafety = &function.sig.unsafety;
+    let generics = &function.sig.generics;
     let inputs = &mut function.sig.inputs;
     let output = &mut function.sig.output;
     let block = &function.block;
@@ -50,7 +51,7 @@ pub fn plugin_fn(
     quote! {
         #[no_mangle]
         pub #constness #unsafety extern "C" fn #name() -> i32 {
-            fn inner(#inputs) #output {
+            fn inner #generics(#inputs) #output {
                 #block
             }
 

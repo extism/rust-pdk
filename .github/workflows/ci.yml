@@ -54,6 +54,7 @@ jobs:
           echo $TEST | grep '"count":4'
           echo $TEST | grep '"config":"1"'
           echo $TEST | grep '"a":"this is var a"'
+          echo $TEST | grep '"b":"new_value"'
 
           TEST=$(extism call test/http.wasm http_get --input '{"url": "https://jsonplaceholder.typicode.com/todos/1"}')
           echo $TEST | grep '"userId": 1'

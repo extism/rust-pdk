@@ -8,6 +8,7 @@ mod to_memory;
 pub mod var;
 
 #[cfg(feature = "http")]
+/// Types and functions for making HTTP requests
 pub mod http;
 
 pub use anyhow::Error;
@@ -18,9 +19,11 @@ pub use memory::Memory;
 pub use to_memory::ToMemory;
 
 #[cfg(feature = "http")]
+/// HTTP request type
 pub use extism_manifest::HttpRequest;
 
 #[cfg(feature = "http")]
+/// HTTP response type
 pub use http::HttpResponse;
 
 /// The return type of a plugin function
@@ -39,9 +42,17 @@ pub enum LogLevel {
 pub use serde_json as json;
 
 use crate as extism_pdk;
+
 /// JSON encoding
 #[encoding(serde_json::to_vec, serde_json::from_slice)]
 pub struct Json;
+
+/// MsgPack encoding
+#[cfg_attr(
+    feature = "msgpack",
+    encoding(rmp_serde::to_vec, rmp_serde::from_slice)
+)]
+pub struct MsgPack;
 
 /// Base64 conversion
 pub struct Base64(pub String);

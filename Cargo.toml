@@ -13,11 +13,13 @@ anyhow = "1"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 extism-pdk-derive = {path = "./derive", version = "0.1.0"}
-extism-manifest = {version = "0.0.1", optional = true}
+extism-manifest = {version = "0.1.0", optional = true}
+rmp-serde = {version = "1", optional = true}
 base64 = "0.20.0-alpha.1"
 [features]
-default = ["http"]
+default = ["http", "msgpack"]
 http = ["extism-manifest"]
+msgpack = ["rmp-serde"]
 
 [workspace]
 members = [

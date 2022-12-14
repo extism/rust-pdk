@@ -30,6 +30,12 @@ pub fn plugin_fn(
         panic!("extism_pdk::plugin_fn expects a function with one argument, `()` may be used if no input is needed");
     }
 
+    if name == "main" {
+        panic!(
+            "extism_pdk::plugin_fn must not be applied to a `main` function. To fix, rename this to something other than `main`."
+        )
+    }
+
     match output {
         syn::ReturnType::Default => panic!(
             "extism_pdk::plugin_fn expects a return value, `()` may be used if no output is needed"

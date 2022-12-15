@@ -27,6 +27,7 @@ jobs:
         run: cargo publish -p extism-pdk-derive
   publish-pdk:
     name: publish-pdk
+    needs: publish-derive
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

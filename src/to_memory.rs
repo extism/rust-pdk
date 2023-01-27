@@ -1,5 +1,7 @@
 use crate::*;
 
+use base64::Engine;
+
 pub trait ToMemory {
     fn to_memory(&self) -> Result<Memory, Error>;
 
@@ -59,6 +61,19 @@ impl ToMemory for json::Value {
 
 impl ToMemory for Base64 {
     fn to_memory(&self) -> Result<Memory, Error> {
-        base64::encode(&self.0).to_memory()
+        base64::engine::general_purpose::STANDARD
+            .encode(&self.0)
+            .to_memory()
+    }
+}
+
+impl ToMemory for u64 {
+    fn to_memory(&self) -> Result<Memory, Error> {
+        let length = unsafe { bindings::extism_length(*self) };
+        Ok(Memory {
+            length,
+            offset: *self,
+            free: false,
+        })
     }
 }

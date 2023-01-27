@@ -1,5 +1,7 @@
 use crate::*;
 
+use base64::Engine;
+
 pub trait FromBytes<T = Self>: Sized {
     fn from_bytes(input: Vec<u8>) -> Result<T, Error>;
 }
@@ -32,6 +34,6 @@ impl FromBytes for json::Value {
 
 impl FromBytes<Vec<u8>> for Base64 {
     fn from_bytes(input: Vec<u8>) -> Result<Vec<u8>, Error> {
-        Ok(base64::decode(input)?)
+        Ok(base64::engine::general_purpose::STANDARD.decode(input)?)
     }
 }

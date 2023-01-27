@@ -1,5 +1,5 @@
 use quote::quote;
-use syn::{parse_macro_input, ItemFn, ItemStruct};
+use syn::{parse_macro_input, ItemFn, ItemForeignMod, ItemStruct};
 
 /// `plugin_fn` is used to define a function that will be exported by a plugin
 ///
@@ -69,6 +69,121 @@ pub fn plugin_fn(
         }
     }
     .into()
+}
+
+/// `host_fn` is used to define a host function that will be callable from within a plugin
+#[proc_macro_attribute]
+pub fn host_fn(
+    _attr: proc_macro::TokenStream,
+    item: proc_macro::TokenStream,
+) -> proc_macro::TokenStream {
+    let item = parse_macro_input!(item as ItemForeignMod);
+    if item.abi.name.is_none() || item.abi.name.unwrap().value() != "ExtismHost" {
+        panic!("Expected `extern \"ExtismHost\"` block");
+    }
+    let functions = item.items;
+
+    let mut gen = quote!();
+
+    for function in functions {
+        if let syn::ForeignItem::Fn(function) = function {
+            let name = &function.sig.ident;
+            // let constness = &function.sig.constness;
+            // let unsafety = &function.sig.unsafety;
+            // let generics = &function.sig.generics;
+            let original_inputs = function.sig.inputs.clone();
+            // let inputs = function.sig.inputs.into_iter();
+            let output = &function.sig.output;
+
+            let mut into_inputs = vec![];
+            let mut converted_inputs = vec![];
+
+            let converted_output = match output {
+                syn::ReturnType::Default => quote!(#output),
+                syn::ReturnType::Type(_, ty) => match &**ty {
+                    syn::Type::Path(p) => {
+                        if let Some(ident) = p.path.get_ident() {
+                            if ident == "Memory" {
+                                quote!(u64)
+                            } else {
+                                quote!(#output)
+                            }
+                        } else if p
+                            .path
+                            .segments
+                            .iter()
+                            .map(|x| x.ident.to_string())
+                            .collect::<Vec<String>>()
+                            == vec!["extism_pdk", "Memory"]
+                        {
+                            quote!(u64)
+                        } else {
+                            quote!(#output)
+                        }
+                    }
+                    _ => quote!(#output),
+                },
+            };
+
+            for input in &original_inputs {
+                match input {
+                    syn::FnArg::Typed(t) => {
+                        match &*t.ty {
+                            syn::Type::Path(p) => {
+                                if let Some(ident) = p.path.get_ident() {
+                                    if ident == "Memory" {
+                                        let mut input = t.clone();
+                                        input.ty = Box::new(syn::Type::Verbatim(quote!(u64)));
+                                        converted_inputs.push(syn::FnArg::Typed(input));
+                                    } else {
+                                        converted_inputs.push(input.clone());
+                                    }
+                                } else if p
+                                    .path
+                                    .segments
+                                    .iter()
+                                    .map(|x| x.ident.to_string())
+                                    .collect::<Vec<String>>()
+                                    == vec!["extism_pdk", "Memory"]
+                                {
+                                    let mut input = t.clone();
+                                    input.ty = Box::new(syn::Type::Verbatim(quote!(u64)));
+                                    converted_inputs.push(syn::FnArg::Typed(input));
+                                } else {
+                                    converted_inputs.push(input.clone());
+                                }
+                            }
+                            _ => converted_inputs.push(input.clone()),
+                        }
+                        match &*t.pat {
+                            syn::Pat::Ident(i) => {
+                                into_inputs.push(quote!(#i.into()));
+                            }
+                            _ => panic!("invalid host function argument"),
+                        }
+                    }
+                    _ => panic!("self arguments are not permitted in host functions"),
+                }
+            }
+
+            let impl_name = syn::Ident::new(&format!("{name}_impl"), name.span());
+
+            gen = quote! {
+                #gen
+
+                extern "C" {
+                    fn #impl_name(#(#converted_inputs),*) -> #converted_output;
+                }
+
+                #[no_mangle]
+                pub unsafe fn #name(#original_inputs) #output {
+                    #impl_name(#(#into_inputs),*).into()
+                }
+            };
+        }
+    }
+
+    gen.into()
 }
 
 struct Args {

@@ -13,7 +13,7 @@ pub mod http;
 
 pub use anyhow::Error;
 pub(crate) use bindings::*;
-pub use extism_pdk_derive::{encoding, plugin_fn};
+pub use extism_pdk_derive::{encoding, host_fn, plugin_fn};
 pub use from_bytes::FromBytes;
 pub use memory::Memory;
 pub use to_memory::ToMemory;

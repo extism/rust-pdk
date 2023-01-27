@@ -85,28 +85,34 @@ pub fn host_fn(
 
     let mut gen = quote!();
 
+    let is_native_wasm_type = |x: &syn::Ident| {
+        x == "i64"
+            || x == "u64"
+            || x == "i32"
+            || x == "u32"
+            || x == "f32"
+            || x == "f64"
+            || x == "v128"
+    };
+
     for function in functions {
         if let syn::ForeignItem::Fn(function) = function {
             let name = &function.sig.ident;
-            // let constness = &function.sig.constness;
-            // let unsafety = &function.sig.unsafety;
-            // let generics = &function.sig.generics;
             let original_inputs = function.sig.inputs.clone();
-            // let inputs = function.sig.inputs.into_iter();
             let output = &function.sig.output;
 
             let mut into_inputs = vec![];
             let mut converted_inputs = vec![];
 
             let converted_output = match output {
-                syn::ReturnType::Default => quote!(#output),
+                syn::ReturnType::Default => quote!(()),
                 syn::ReturnType::Type(_, ty) => match &**ty {
                     syn::Type::Path(p) => {
                         if let Some(ident) = p.path.get_ident() {
-                            if ident == "Memory" {
-                                quote!(u64)
+                            if is_native_wasm_type(ident) {
+                                quote!(#ty)
                             } else {
-                                quote!(#output)
+                                quote!(u64)
                             }
                         } else if p
                             .path
@@ -118,11 +124,15 @@ pub fn host_fn(
                         {
                             quote!(u64)
                         } else {
-                            quote!(#output)
+                            quote!(#ty)
                         }
                     }
-                    _ => quote!(#output),
+                    _ => quote!(#ty),
                 },
+            };
+            let output = match output {
+                syn::ReturnType::Default => quote!(()),
+                syn::ReturnType::Type(_, ty) => quote!(#ty),
             };
 
             for input in &original_inputs {
@@ -176,7 +186,7 @@ pub fn host_fn(
                 }
 
                 #[no_mangle]
-                pub unsafe fn #name(#original_inputs) #output {
+                pub unsafe fn #name(#original_inputs) -> #output {
                     #impl_name(#(#into_inputs),*).into()
                 }
             };

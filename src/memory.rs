@@ -123,6 +123,10 @@ impl Memory {
             }
         }
     }
+
+    pub fn to<T: FromBytes>(&self) -> Result<T, Error> {
+        T::from_bytes(self.to_vec())
+    }
 }
 
 impl Drop for Memory {
@@ -130,6 +134,18 @@ impl Drop for Memory {
         if self.free {
             unsafe { extism_free(self.offset) }
         }
+    }
+}
+
+impl From<Memory> for () {
+    fn from(_: Memory) -> () {
+        ()
+    }
+}
+
+impl From<()> for Memory {
+    fn from(_: ()) -> Memory {
+        Memory::null()
     }
 }
 

@@ -101,73 +101,61 @@ pub fn host_fn(
             let original_inputs = function.sig.inputs.clone();
             let output = &function.sig.output;
 
+            let vis = &function.vis;
             let mut into_inputs = vec![];
             let mut converted_inputs = vec![];
 
-            let converted_output = match output {
-                syn::ReturnType::Default => quote!(()),
+            let (output_is_ptr, converted_output) = match output {
+                syn::ReturnType::Default => (false, quote!(())),
                 syn::ReturnType::Type(_, ty) => match &**ty {
                     syn::Type::Path(p) => {
                         if let Some(ident) = p.path.get_ident() {
                             if is_native_wasm_type(ident) {
-                                quote!(#ty)
+                                (false, quote!(#ty))
                             } else {
-                                quote!(u64)
+                                (true, quote!(u64))
                             }
-                        } else if p
-                            .path
-                            .segments
-                            .iter()
-                            .map(|x| x.ident.to_string())
-                            .collect::<Vec<String>>()
-                            == vec!["extism_pdk", "Memory"]
-                        {
-                            quote!(u64)
                         } else {
-                            quote!(#ty)
+                            (true, quote!(u64))
                         }
                     }
-                    _ => quote!(#ty),
+                    _ => (false, quote!(#ty)),
                 },
-            };
-            let output = match output {
-                syn::ReturnType::Default => quote!(()),
-                syn::ReturnType::Type(_, ty) => quote!(#ty),
             };
 
             for input in &original_inputs {
+                let mut is_ptr = false;
                 match input {
                     syn::FnArg::Typed(t) => {
                         match &*t.ty {
                             syn::Type::Path(p) => {
                                 if let Some(ident) = p.path.get_ident() {
-                                    if ident == "Memory" {
+                                    if is_native_wasm_type(ident) {
+                                        converted_inputs.push(input.clone());
+                                    } else {
                                         let mut input = t.clone();
                                         input.ty = Box::new(syn::Type::Verbatim(quote!(u64)));
                                         converted_inputs.push(syn::FnArg::Typed(input));
-                                    } else {
-                                        converted_inputs.push(input.clone());
+                                        is_ptr = true;
                                     }
-                                } else if p
-                                    .path
-                                    .segments
-                                    .iter()
-                                    .map(|x| x.ident.to_string())
-                                    .collect::<Vec<String>>()
-                                    == vec!["extism_pdk", "Memory"]
-                                {
+                                } else {
                                     let mut input = t.clone();
                                     input.ty = Box::new(syn::Type::Verbatim(quote!(u64)));
                                     converted_inputs.push(syn::FnArg::Typed(input));
-                                } else {
-                                    converted_inputs.push(input.clone());
+                                    is_ptr = true;
                                 }
                             }
                             _ => converted_inputs.push(input.clone()),
                         }
                         match &*t.pat {
                             syn::Pat::Ident(i) => {
-                                into_inputs.push(quote!(#i.into()));
+                                if is_ptr {
+                                    into_inputs.push(
+                                        quote!(extism_pdk::ToMemory::to_memory(&#i)?.keep().offset),
+                                    );
+                                } else {
+                                    into_inputs.push(quote!(#i));
+                                }
                             }
                             _ => panic!("invalid host function argument"),
                         }
@@ -178,18 +166,55 @@ pub fn host_fn(
 
             let impl_name = syn::Ident::new(&format!("{name}_impl"), name.span());
 
-            gen = quote! {
-                #gen
+            match output {
+                syn::ReturnType::Default => {
+                    gen = quote! {
+                        #gen
 
-                extern "C" {
-                    fn #impl_name(#(#converted_inputs),*) -> #converted_output;
-                }
+                        extern "C" {
+                            fn #impl_name(#(#converted_inputs),*);
+                        }
 
-                #[no_mangle]
-                pub unsafe fn #name(#original_inputs) -> #output {
-                    #impl_name(#(#into_inputs),*).into()
+                        #[no_mangle]
+                        #vis unsafe fn #name(#original_inputs) -> Result<(), extism_pdk::Error> {
+                            #impl_name(#(#into_inputs),*);
+                            Ok(())
+                        }
+                    };
                 }
-            };
+                syn::ReturnType::Type(_, ty) => {
+                    let output = ty;
+                    if output_is_ptr {
+                        gen = quote! {
+                            #gen
+
+                            extern "C" {
+                                fn #impl_name(#(#converted_inputs),*) -> #converted_output;
+                            }
+
+                            #[no_mangle]
+                            #vis unsafe fn #name(#original_inputs) -> Result<#output, extism_pdk::Error> {
+                                let res = extism_pdk::Memory::from(#impl_name(#(#into_inputs),*));
+                                <#output as extism_pdk::FromBytes>::from_bytes(res.to_vec())
+                            }
+                        };
+                    } else {
+                        gen = quote! {
+                            #gen
+
+                            extern "C" {
+                                fn #impl_name(#(#converted_inputs),*) -> #converted_output;
+                            }
+
+                            #[no_mangle]
+                            #vis unsafe fn #name(#original_inputs) -> Result<#output, extism_pdk::Error> {
+                                let res = #impl_name(#(#into_inputs),*);
+                                Ok(res)
+                            }
+                        };
+                    }
+                }
+            }
         }
     }
 

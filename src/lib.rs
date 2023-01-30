@@ -1,3 +1,5 @@
+pub use std::arch::wasm32::v128;
+
 mod macros;
 
 pub mod bindings;

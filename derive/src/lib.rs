@@ -102,6 +102,7 @@ pub fn host_fn(
             let output = &function.sig.output;
 
             let vis = &function.vis;
+            let generics = &function.sig.generics;
             let mut into_inputs = vec![];
             let mut converted_inputs = vec![];
 
@@ -165,18 +166,25 @@ pub fn host_fn(
             }
 
             let impl_name = syn::Ident::new(&format!("{name}_impl"), name.span());
+            let link_name = name.to_string();
+            let link_name = link_name.as_str();
+
+            let impl_block = quote! {
+                extern "C" {
+                    #[link_name = #link_name]
+                    fn #impl_name(#(#converted_inputs),*) -> #converted_output;
+                }
+            };
 
             match output {
                 syn::ReturnType::Default => {
                     gen = quote! {
                         #gen
 
-                        extern "C" {
-                            fn #impl_name(#(#converted_inputs),*);
-                        }
+                        #impl_block
 
                         #[no_mangle]
-                        #vis unsafe fn #name(#original_inputs) -> Result<(), extism_pdk::Error> {
+                        #vis unsafe fn #name #generics (#original_inputs) -> Result<(), extism_pdk::Error> {
                             #impl_name(#(#into_inputs),*);
                             Ok(())
                         }
@@ -188,12 +196,10 @@ pub fn host_fn(
                         gen = quote! {
                             #gen
 
-                            extern "C" {
-                                fn #impl_name(#(#converted_inputs),*) -> #converted_output;
-                            }
+                            #impl_block
 
                             #[no_mangle]
-                            #vis unsafe fn #name(#original_inputs) -> Result<#output, extism_pdk::Error> {
+                            #vis unsafe fn #name #generics (#original_inputs) -> Result<#output, extism_pdk::Error> {
                                 let res = extism_pdk::Memory::from(#impl_name(#(#into_inputs),*));
                                 <#output as extism_pdk::FromBytes>::from_bytes(res.to_vec())
                             }
@@ -202,12 +208,10 @@ pub fn host_fn(
                         gen = quote! {
                             #gen
 
-                            extern "C" {
-                                fn #impl_name(#(#converted_inputs),*) -> #converted_output;
-                            }
+                            #impl_block
 
                             #[no_mangle]
-                            #vis unsafe fn #name(#original_inputs) -> Result<#output, extism_pdk::Error> {
+                            #vis unsafe fn #name #generics (#original_inputs) -> Result<#output, extism_pdk::Error> {
                                 let res = #impl_name(#(#into_inputs),*);
                                 Ok(res)
                             }

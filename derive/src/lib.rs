@@ -85,14 +85,27 @@ pub fn host_fn(
 
     let mut gen = quote!();
 
-    let is_native_wasm_type = |x: &syn::Ident| {
-        x == "i64"
-            || x == "u64"
-            || x == "i32"
-            || x == "u32"
-            || x == "f32"
-            || x == "f64"
-            || x == "v128"
+    let is_native_wasm_type = |x: &syn::TypePath| {
+        if let Some(x) = x.path.get_ident() {
+            return x == "i64"
+                || x == "u64"
+                || x == "i32"
+                || x == "u32"
+                || x == "f32"
+                || x == "f64"
+                || x == "v128";
+        }
+
+        let seg = x
+            .path
+            .segments
+            .iter()
+            .map(|x| x.ident.to_string())
+            .collect::<Vec<_>>();
+
+        seg == &["std", "arch", "wasm32", "v128"]
+            || seg == &["core", "arch", "wasm32", "v128"]
+            || seg == &["extism_pdk", "v128"]
     };
 
     for function in functions {
@@ -110,17 +123,13 @@ pub fn host_fn(
                 syn::ReturnType::Default => (false, quote!(())),
                 syn::ReturnType::Type(_, ty) => match &**ty {
                     syn::Type::Path(p) => {
-                        if let Some(ident) = p.path.get_ident() {
-                            if is_native_wasm_type(ident) {
-                                (false, quote!(#ty))
-                            } else {
-                                (true, quote!(u64))
-                            }
+                        if is_native_wasm_type(p) {
+                            (false, quote!(#ty))
                         } else {
                             (true, quote!(u64))
                         }
                     }
-                    _ => (false, quote!(#ty)),
+                    _ => (true, quote!(u64)),
                 },
             };
 
@@ -130,15 +139,8 @@ pub fn host_fn(
                     syn::FnArg::Typed(t) => {
                         match &*t.ty {
                             syn::Type::Path(p) => {
-                                if let Some(ident) = p.path.get_ident() {
-                                    if is_native_wasm_type(ident) {
-                                        converted_inputs.push(input.clone());
-                                    } else {
-                                        let mut input = t.clone();
-                                        input.ty = Box::new(syn::Type::Verbatim(quote!(u64)));
-                                        converted_inputs.push(syn::FnArg::Typed(input));
-                                        is_ptr = true;
-                                    }
+                                if is_native_wasm_type(p) {
+                                    converted_inputs.push(input.clone());
                                 } else {
                                     let mut input = t.clone();
                                     input.ty = Box::new(syn::Type::Verbatim(quote!(u64)));
@@ -146,7 +148,12 @@ pub fn host_fn(
                                     is_ptr = true;
                                 }
                             }
-                            _ => converted_inputs.push(input.clone()),
+                            _ => {
+                                let mut input = t.clone();
+                                input.ty = Box::new(syn::Type::Verbatim(quote!(u64)));
+                                converted_inputs.push(syn::FnArg::Typed(input));
+                                is_ptr = true;
+                            }
                         }
                         match &*t.pat {
                             syn::Pat::Ident(i) => {
@@ -176,48 +183,35 @@ pub fn host_fn(
                 }
             };
 
-            match output {
-                syn::ReturnType::Default => {
-                    gen = quote! {
-                        #gen
+            let output = match output {
+                syn::ReturnType::Default => quote!(()),
+                syn::ReturnType::Type(_, ty) => quote!(#ty),
+            };
 
-                        #impl_block
+            if output_is_ptr {
+                gen = quote! {
+                    #gen
 
-                        #[no_mangle]
-                        #vis unsafe fn #name #generics (#original_inputs) -> Result<(), extism_pdk::Error> {
-                            #impl_name(#(#into_inputs),*);
-                            Ok(())
-                        }
-                    };
-                }
-                syn::ReturnType::Type(_, ty) => {
-                    let output = ty;
-                    if output_is_ptr {
-                        gen = quote! {
-                            #gen
+                    #impl_block
 
-                            #impl_block
-
-                            #[no_mangle]
-                            #vis unsafe fn #name #generics (#original_inputs) -> Result<#output, extism_pdk::Error> {
-                                let res = extism_pdk::Memory::from(#impl_name(#(#into_inputs),*));
-                                <#output as extism_pdk::FromBytes>::from_bytes(res.to_vec())
-                            }
-                        };
-                    } else {
-                        gen = quote! {
-                            #gen
-
-                            #impl_block
-
-                            #[no_mangle]
-                            #vis unsafe fn #name #generics (#original_inputs) -> Result<#output, extism_pdk::Error> {
-                                let res = #impl_name(#(#into_inputs),*);
-                                Ok(res)
-                            }
-                        };
+                    #[no_mangle]
+                    #vis unsafe fn #name #generics (#original_inputs) -> Result<#output, extism_pdk::Error> {
+                        let res = extism_pdk::Memory::from(#impl_name(#(#into_inputs),*));
+                        <#output as extism_pdk::FromBytes>::from_bytes(res.to_vec())
                     }
-                }
+                };
+            } else {
+                gen = quote! {
+                    #gen
+
+                    #impl_block
+
+                    #[no_mangle]
+                    #vis unsafe fn #name #generics (#original_inputs) -> Result<#output, extism_pdk::Error> {
+                        let res = #impl_name(#(#into_inputs),*);
+                        Ok(res)
+                    }
+                };
             }
         }
     }

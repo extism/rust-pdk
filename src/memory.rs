@@ -24,6 +24,21 @@ impl Memory {
         self.length == 0
     }
 
+    /// Find `Memory` by offset
+    pub fn find(offset: u64) -> Option<Memory> {
+        let length = unsafe { bindings::extism_length(offset) };
+
+        if length == 0 {
+            return None;
+        }
+
+        Some(Memory {
+            offset,
+            length,
+            free: false,
+        })
+    }
+
     /// Allocate a new block with the given `size`
     pub fn new(length: usize) -> Memory {
         let length = length as u64;
@@ -58,6 +73,12 @@ impl Memory {
     /// Prevent memory from being freed when it goes out of scope.     
     pub fn keep(mut self) -> Self {
         self.free = false;
+        self
+    }
+
+    /// Determine whether or not a memory block should be freed when it goes out of scope
+    pub fn with_free(mut self, free: bool) -> Self {
+        self.free = free;
         self
     }
 
@@ -102,6 +123,10 @@ impl Memory {
             }
         }
     }
+
+    pub fn to<T: FromBytes>(&self) -> Result<T, Error> {
+        T::from_bytes(self.to_vec())
+    }
 }
 
 impl Drop for Memory {
@@ -109,5 +134,41 @@ impl Drop for Memory {
         if self.free {
             unsafe { extism_free(self.offset) }
         }
+    }
+}
+
+impl From<Memory> for () {
+    fn from(_: Memory) -> () {
+        ()
+    }
+}
+
+impl From<()> for Memory {
+    fn from(_: ()) -> Memory {
+        Memory::null()
+    }
+}
+
+impl From<Memory> for i64 {
+    fn from(m: Memory) -> Self {
+        m.offset as i64
+    }
+}
+
+impl From<Memory> for u64 {
+    fn from(m: Memory) -> Self {
+        m.offset
+    }
+}
+
+impl From<u64> for Memory {
+    fn from(offset: u64) -> Memory {
+        Memory::find(offset).unwrap_or_else(|| Memory::null())
+    }
+}
+
+impl From<i64> for Memory {
+    fn from(offset: i64) -> Memory {
+        Memory::find(offset as u64).unwrap_or_else(|| Memory::null())
     }
 }

@@ -1,5 +1,5 @@
 use quote::quote;
-use syn::{parse_macro_input, ItemFn, ItemStruct};
+use syn::{parse_macro_input, ItemFn, ItemForeignMod, ItemStruct};
 
 /// `plugin_fn` is used to define a function that will be exported by a plugin
 ///
@@ -69,6 +69,154 @@ pub fn plugin_fn(
         }
     }
     .into()
+}
+
+/// `host_fn` is used to define a host function that will be callable from within a plugin
+#[proc_macro_attribute]
+pub fn host_fn(
+    _attr: proc_macro::TokenStream,
+    item: proc_macro::TokenStream,
+) -> proc_macro::TokenStream {
+    let item = parse_macro_input!(item as ItemForeignMod);
+    if item.abi.name.is_none() || item.abi.name.unwrap().value() != "ExtismHost" {
+        panic!("Expected `extern \"ExtismHost\"` block");
+    }
+    let functions = item.items;
+
+    let mut gen = quote!();
+
+    let is_native_wasm_type = |x: &syn::TypePath| {
+        if let Some(x) = x.path.get_ident() {
+            return x == "i64"
+                || x == "u64"
+                || x == "i32"
+                || x == "u32"
+                || x == "f32"
+                || x == "f64"
+                || x == "v128";
+        }
+
+        let seg = x
+            .path
+            .segments
+            .iter()
+            .map(|x| x.ident.to_string())
+            .collect::<Vec<_>>();
+
+        seg == &["std", "arch", "wasm32", "v128"]
+            || seg == &["core", "arch", "wasm32", "v128"]
+            || seg == &["extism_pdk", "v128"]
+    };
+
+    for function in functions {
+        if let syn::ForeignItem::Fn(function) = function {
+            let name = &function.sig.ident;
+            let original_inputs = function.sig.inputs.clone();
+            let output = &function.sig.output;
+
+            let vis = &function.vis;
+            let generics = &function.sig.generics;
+            let mut into_inputs = vec![];
+            let mut converted_inputs = vec![];
+
+            let (output_is_ptr, converted_output) = match output {
+                syn::ReturnType::Default => (false, quote!(())),
+                syn::ReturnType::Type(_, ty) => match &**ty {
+                    syn::Type::Path(p) => {
+                        if is_native_wasm_type(p) {
+                            (false, quote!(#ty))
+                        } else {
+                            (true, quote!(u64))
+                        }
+                    }
+                    _ => (true, quote!(u64)),
+                },
+            };
+
+            for input in &original_inputs {
+                let mut is_ptr = false;
+                match input {
+                    syn::FnArg::Typed(t) => {
+                        match &*t.ty {
+                            syn::Type::Path(p) => {
+                                if is_native_wasm_type(p) {
+                                    converted_inputs.push(input.clone());
+                                } else {
+                                    let mut input = t.clone();
+                                    input.ty = Box::new(syn::Type::Verbatim(quote!(u64)));
+                                    converted_inputs.push(syn::FnArg::Typed(input));
+                                    is_ptr = true;
+                                }
+                            }
+                            _ => {
+                                let mut input = t.clone();
+                                input.ty = Box::new(syn::Type::Verbatim(quote!(u64)));
+                                converted_inputs.push(syn::FnArg::Typed(input));
+                                is_ptr = true;
+                            }
+                        }
+                        match &*t.pat {
+                            syn::Pat::Ident(i) => {
+                                if is_ptr {
+                                    into_inputs.push(
+                                        quote!(extism_pdk::ToMemory::to_memory(&#i)?.keep().offset),
+                                    );
+                                } else {
+                                    into_inputs.push(quote!(#i));
+                                }
+                            }
+                            _ => panic!("invalid host function argument"),
+                        }
+                    }
+                    _ => panic!("self arguments are not permitted in host functions"),
+                }
+            }
+
+            let impl_name = syn::Ident::new(&format!("{name}_impl"), name.span());
+            let link_name = name.to_string();
+            let link_name = link_name.as_str();
+
+            let impl_block = quote! {
+                extern "C" {
+                    #[link_name = #link_name]
+                    fn #impl_name(#(#converted_inputs),*) -> #converted_output;
+                }
+            };
+
+            let output = match output {
+                syn::ReturnType::Default => quote!(()),
+                syn::ReturnType::Type(_, ty) => quote!(#ty),
+            };
+
+            if output_is_ptr {
+                gen = quote! {
+                    #gen
+
+                    #impl_block
+
+                    #[no_mangle]
+                    #vis unsafe fn #name #generics (#original_inputs) -> Result<#output, extism_pdk::Error> {
+                        let res = extism_pdk::Memory::from(#impl_name(#(#into_inputs),*));
+                        <#output as extism_pdk::FromBytes>::from_bytes(res.to_vec())
+                    }
+                };
+            } else {
+                gen = quote! {
+                    #gen
+
+                    #impl_block
+
+                    #[no_mangle]
+                    #vis unsafe fn #name #generics (#original_inputs) -> Result<#output, extism_pdk::Error> {
+                        let res = #impl_name(#(#into_inputs),*);
+                        Ok(res)
+                    }
+                };
+            }
+        }
+    }
+
+    gen.into()
 }
 
 struct Args {

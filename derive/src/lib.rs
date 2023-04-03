@@ -40,8 +40,8 @@ pub fn plugin_fn(
         syn::ReturnType::Default => panic!(
             "extism_pdk::plugin_fn expects a return value, `()` may be used if no output is needed"
         ),
-        syn::ReturnType::Type(_, t) => match t.as_ref() {
-            syn::Type::Path(p) => {
+        syn::ReturnType::Type(_, t) => {
+            if let syn::Type::Path(p) = t.as_ref() {
                 if let Some(t) = p.path.segments.last() {
                     if t.ident != "FnResult" {
                         panic!("extism_pdk::plugin_fn expects a function that returns extism_pdk::FnResult");
@@ -50,8 +50,7 @@ pub fn plugin_fn(
                     panic!("extism_pdk::plugin_fn expects a function that returns extism_pdk::FnResult");
                 }
             }
-            _ => (),
-        },
+        }
     }
 
     quote! {
@@ -103,9 +102,9 @@ pub fn host_fn(
             .map(|x| x.ident.to_string())
             .collect::<Vec<_>>();
 
-        seg == &["std", "arch", "wasm32", "v128"]
-            || seg == &["core", "arch", "wasm32", "v128"]
-            || seg == &["extism_pdk", "v128"]
+        seg == ["std", "arch", "wasm32", "v128"]
+            || seg == ["core", "arch", "wasm32", "v128"]
+            || seg == ["extism_pdk", "v128"]
     };
 
     for function in functions {

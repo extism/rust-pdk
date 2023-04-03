@@ -37,7 +37,7 @@ pub fn request<T: ToMemory>(
     body: Option<T>,
 ) -> Result<HttpResponse, Error> {
     let enc = serde_json::to_vec(req)?;
-    let req = Memory::from_bytes(&enc);
+    let req = Memory::from_bytes(enc);
     let body = match body {
         Some(b) => Some(b.to_memory()?),
         None => None,

@@ -138,9 +138,7 @@ impl Drop for Memory {
 }
 
 impl From<Memory> for () {
-    fn from(_: Memory) -> () {
-        ()
-    }
+    fn from(_: Memory) {}
 }
 
 impl From<()> for Memory {
@@ -163,12 +161,12 @@ impl From<Memory> for u64 {
 
 impl From<u64> for Memory {
     fn from(offset: u64) -> Memory {
-        Memory::find(offset).unwrap_or_else(|| Memory::null())
+        Memory::find(offset).unwrap_or_else(Memory::null)
     }
 }
 
 impl From<i64> for Memory {
     fn from(offset: i64) -> Memory {
-        Memory::find(offset as u64).unwrap_or_else(|| Memory::null())
+        Memory::find(offset as u64).unwrap_or_else(Memory::null)
     }
 }

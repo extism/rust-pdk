@@ -42,7 +42,7 @@ pub fn request<T: ToMemory>(
         Some(b) => Some(b.to_memory()?),
         None => None,
     };
-    let data = body.map(|x| x.offset).unwrap_or(0);
+    let data = body.as_ref().map(|x| x.offset).unwrap_or(0);
     let offs = unsafe { extism_http_request(req.offset, data) };
     let status = unsafe { extism_http_status_code() };
     let len = unsafe { extism_length(offs) };

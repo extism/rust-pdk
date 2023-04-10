@@ -22,6 +22,7 @@ jobs:
           target: wasm32-unknown-unknown
 
       - name: Release Rust Host SDK
+        continue-on-error: true
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_API_TOKEN }}
         run: cargo publish -p extism-pdk-derive

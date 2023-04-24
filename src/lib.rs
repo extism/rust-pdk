@@ -1,3 +1,4 @@
+#[cfg(target_arch = "wasm32")]
 pub use std::arch::wasm32::v128;
 
 mod macros;

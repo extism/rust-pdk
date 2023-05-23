@@ -193,7 +193,6 @@ pub fn host_fn(
 
                     #impl_block
 
-                    #[no_mangle]
                     #vis unsafe fn #name #generics (#original_inputs) -> Result<#output, extism_pdk::Error> {
                         let res = extism_pdk::Memory::from(#impl_name(#(#into_inputs),*));
                         <#output as extism_pdk::FromBytes>::from_bytes(res.to_vec())
@@ -205,7 +204,6 @@ pub fn host_fn(
 
                     #impl_block
 
-                    #[no_mangle]
                     #vis unsafe fn #name #generics (#original_inputs) -> Result<#output, extism_pdk::Error> {
                         let res = #impl_name(#(#into_inputs),*);
                         Ok(res)

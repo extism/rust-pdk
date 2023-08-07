@@ -56,7 +56,7 @@ pub fn plugin_fn(
     quote! {
         #[no_mangle]
         pub #constness #unsafety extern "C" fn #name() -> i32 {
-            fn inner #generics(#inputs) #output {
+            #constness #unsafety fn inner #generics(#inputs) #output {
                 #block
             }
 

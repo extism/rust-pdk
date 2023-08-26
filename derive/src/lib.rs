@@ -6,7 +6,7 @@ use syn::{parse_macro_input, ItemFn, ItemForeignMod, ItemStruct};
 /// It should be added to a function you would like to export, the function should
 /// accept a parameter that implements `extism_pdk::FromBytes` and return a
 /// `extism_pdk::FnResult` that contains a value that implements
-/// `extism_pdk::ToMemory`.
+/// `extism_pdk::ToBytes`.
 #[proc_macro_attribute]
 pub fn plugin_fn(
     _attr: proc_macro::TokenStream,
@@ -214,64 +214,4 @@ pub fn host_fn(
     }
 
     gen.into()
-}
-
-struct Args {
-    arg: Vec<syn::Path>,
-}
-
-impl syn::parse::Parse for Args {
-    fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
-        let args =
-            syn::punctuated::Punctuated::<syn::Path, syn::Token![,]>::parse_terminated(input)?;
-        Ok(Args {
-            arg: args.into_iter().collect(),
-        })
-    }
-}
-
-/// `encoding` is used to add a new serde encoder/decoder. It accepts two parameters:
-/// 1) path to serialization function
-/// 2) path to deserialization function
-///
-/// ```rust,ignore
-/// #[encoding(serde_json::to_vec, serde_json::from_slice)]]
-/// pub struct Json;
-/// ```
-#[proc_macro_attribute]
-pub fn encoding(
-    attr: proc_macro::TokenStream,
-    item: proc_macro::TokenStream,
-) -> proc_macro::TokenStream {
-    let item = parse_macro_input!(item as ItemStruct);
-    let args = parse_macro_input!(attr as Args);
-
-    if args.arg.len() != 2 {
-        panic!("extism_pdk::encoding expects 2 arguments (encoding function and decoding function) but got {}", args.arg.len())
-    }
-
-    let vis = item.vis;
-    let name = &item.ident;
-
-    let encode = &args.arg[0];
-    let decode = &args.arg[1];
-
-    quote! {
-        #vis struct #name<T>(pub T);
-
-        impl<T: serde::de::DeserializeOwned> extism_pdk::FromBytes for #name<T> {
-            fn from_bytes(d: Vec<u8>) -> Result<Self, extism_pdk::Error> {
-                let x = #decode(&d)?;
-                Ok(#name(x))
-            }
-        }
-
-        impl<T: serde::Serialize> extism_pdk::ToMemory for #name<T> {
-            fn to_memory(&self) -> Result<extism_pdk::Memory, extism_pdk::Error> {
-                let x = #encode(&self.0)?;
-                Ok(extism_pdk::Memory::from_bytes(x))
-            }
-        }
-    }
-    .into()
 }

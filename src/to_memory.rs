@@ -12,7 +12,10 @@ pub trait ToMemory {
 
 impl ToMemory for Memory {
     fn to_memory(&self) -> Result<Memory, Error> {
-        Ok(Memory::wrap(self.offset, self.length, false))
+        Ok(Memory(MemoryHandle {
+            offset: self.offset(),
+            length: self.len() as u64,
+        }))
     }
 }
 
@@ -31,31 +34,31 @@ impl ToMemory for () {
 
 impl ToMemory for Vec<u8> {
     fn to_memory(&self) -> Result<Memory, Error> {
-        Ok(Memory::from_bytes(self))
+        Memory::from_bytes(self)
     }
 }
 
 impl ToMemory for &[u8] {
     fn to_memory(&self) -> Result<Memory, Error> {
-        Ok(Memory::from_bytes(self))
+        Memory::from_bytes(self)
     }
 }
 
 impl ToMemory for String {
     fn to_memory(&self) -> Result<Memory, Error> {
-        Ok(Memory::from_bytes(self))
+        Memory::from_bytes(self)
     }
 }
 
 impl ToMemory for &str {
     fn to_memory(&self) -> Result<Memory, Error> {
-        Ok(Memory::from_bytes(self))
+        Memory::from_bytes(self)
     }
 }
 
 impl ToMemory for json::Value {
     fn to_memory(&self) -> Result<Memory, Error> {
-        Ok(Memory::from_bytes(serde_json::to_vec(self)?))
+        Memory::from_bytes(serde_json::to_vec(self)?)
     }
 }
 
@@ -70,10 +73,9 @@ impl ToMemory for Base64 {
 impl ToMemory for u64 {
     fn to_memory(&self) -> Result<Memory, Error> {
         let length = unsafe { bindings::extism_length(*self) };
-        Ok(Memory {
+        Ok(Memory(MemoryHandle {
             length,
             offset: *self,
-            free: false,
-        })
+        }))
     }
 }

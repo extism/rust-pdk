@@ -1,21 +1,24 @@
 use crate::*;
 
-pub fn get_memory(key: impl AsRef<str>) -> Option<Memory> {
-    let mem = Memory::from_bytes(key.as_ref().as_bytes());
+pub fn get_memory(key: impl AsRef<str>) -> Result<Option<Memory>, Error> {
+    let mem = Memory::from_bytes(key.as_ref().as_bytes())?;
 
-    let offset = unsafe { extism_config_get(mem.offset) };
+    let offset = unsafe { extism_config_get(mem.offset()) };
     if offset == 0 {
-        return None;
+        return Ok(None);
     }
 
     let len = unsafe { extism_length(offset) };
     if len == 0 {
-        return None;
+        return Ok(None);
     }
 
-    Some(Memory::wrap(offset, len, true))
+    Ok(Some(Memory(MemoryHandle {
+        offset,
+        length: len,
+    })))
 }
 
-pub fn get(key: impl AsRef<str>) -> Option<String> {
-    get_memory(key).map(|x| x.to_string().expect("Config value is not a valid string"))
+pub fn get(key: impl AsRef<str>) -> Result<Option<String>, Error> {
+    Ok(get_memory(key)?.map(|x| x.to_string().expect("Config value is not a valid string")))
 }

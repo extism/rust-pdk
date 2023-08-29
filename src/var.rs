@@ -17,7 +17,7 @@ pub fn get_memory(key: impl AsRef<str>) -> Result<Option<Memory>, Error> {
     Ok(Some(Memory(memory)))
 }
 
-pub fn get<'a, T: FromBytes<'a>>(key: impl AsRef<str>) -> Result<Option<T>, Error> {
+pub fn get<T: FromBytesOwned>(key: impl AsRef<str>) -> Result<Option<T>, Error> {
     match get_memory(key)?.map(|x| x.to_vec()) {
         Some(v) => Ok(Some(T::from_bytes(&v)?)),
         None => Ok(None),

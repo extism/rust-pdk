@@ -26,7 +26,7 @@ pub unsafe fn count_vowels<'a>(input: String) -> FnResult<Json<TestOutput<'a>>> 
 
     let a = var::get("a")?.expect("variable 'a' set");
     let a = String::from_utf8(a).expect("string from varible value");
-    let config = config::get("thing").expect("'thing' key set in config");
+    let config = config::get("thing")?.expect("'thing' key set in config");
     let b = "new_value";
 
     let output = TestOutput {

@@ -1,5 +1,5 @@
 use quote::quote;
-use syn::{parse_macro_input, ItemFn, ItemForeignMod, ItemStruct};
+use syn::{parse_macro_input, ItemFn, ItemForeignMod};
 
 /// `plugin_fn` is used to define a function that will be exported by a plugin
 ///
@@ -26,9 +26,7 @@ pub fn plugin_fn(
     let output = &mut function.sig.output;
     let block = &function.block;
 
-    if inputs.is_empty() {
-        panic!("extism_pdk::plugin_fn expects a function with one argument, `()` may be used if no input is needed");
-    }
+    let no_args = inputs.is_empty();
 
     if name == "main" {
         panic!(
@@ -53,21 +51,56 @@ pub fn plugin_fn(
         }
     }
 
-    quote! {
-        #[no_mangle]
-        pub #constness #unsafety extern "C" fn #name() -> i32 {
-            #constness #unsafety fn inner #generics(#inputs) #output {
-                #block
-            }
+    if no_args {
+        quote! {
+            #[no_mangle]
+            pub #constness #unsafety extern "C" fn #name() -> i32 {
+                #constness #unsafety fn inner #generics() #output {
+                    #block
+                }
 
-            let input = extism_pdk::unwrap!(extism_pdk::input());
-            let output = extism_pdk::unwrap!(inner(input));
-            let status = output.status();
-            unwrap!(extism_pdk::output(output));
-            0
+                let output = match inner() {
+                    Ok(x) => x,
+                    Err(rc) => {
+                        let err = format!("{:?}", rc.0);
+                        let mut mem = extism_pdk::Memory::from_bytes(&err).unwrap();
+                        unsafe {
+                            extism_pdk::bindings::extism_error_set(mem.offset());
+                        }
+                        return rc.1;
+                    }
+                };
+                unwrap!(extism_pdk::output(&output));
+                0
+            }
         }
+        .into()
+    } else {
+        quote! {
+            #[no_mangle]
+            pub #constness #unsafety extern "C" fn #name() -> i32 {
+                #constness #unsafety fn inner #generics(#inputs) #output {
+                    #block
+                }
+
+                let input = extism_pdk::unwrap!(extism_pdk::input());
+                let output = match inner(input) {
+                    Ok(x) => x,
+                    Err(rc) => {
+                        let err = format!("{:?}", rc.0);
+                        let mut mem = extism_pdk::Memory::from_bytes(&err).unwrap();
+                        unsafe {
+                            extism_pdk::bindings::extism_error_set(mem.offset());
+                        }
+                        return rc.1;
+                    }
+                };
+                unwrap!(extism_pdk::output(&output));
+                0
+            }
+        }
+        .into()
     }
-    .into()
 }
 
 /// `host_fn` is used to define a host function that will be callable from within a plugin
@@ -158,7 +191,7 @@ pub fn host_fn(
                             syn::Pat::Ident(i) => {
                                 if is_ptr {
                                     into_inputs.push(
-                                        quote!(extism_pdk::ToMemory::to_memory(&#i)?.keep().offset),
+                                        quote!(extism_pdk::ToMemory::to_memory(&&#i)?.offset()),
                                     );
                                 } else {
                                     into_inputs.push(quote!(#i));
@@ -195,7 +228,7 @@ pub fn host_fn(
 
                     #vis unsafe fn #name #generics (#original_inputs) -> Result<#output, extism_pdk::Error> {
                         let res = extism_pdk::Memory::from(#impl_name(#(#into_inputs),*));
-                        <#output as extism_pdk::FromBytes>::from_bytes(res.to_vec())
+                        <#output as extism_pdk::FromBytes>::from_bytes(&res.to_vec())
                     }
                 };
             } else {

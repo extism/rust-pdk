@@ -5,23 +5,23 @@ pub struct Memory(pub MemoryHandle);
 pub mod internal {
     use super::*;
 
-    fn memory_alloc(n: u64) -> MemoryHandle {
+    pub fn memory_alloc(n: u64) -> MemoryHandle {
         let length = n as u64;
         let offset = unsafe { extism_alloc(length) };
         MemoryHandle { offset, length }
     }
 
-    fn memory_free(handle: MemoryHandle) {
+    pub fn memory_free(handle: MemoryHandle) {
         unsafe { extism_free(handle.offset) }
     }
 
-    fn memory_bytes(handle: MemoryHandle) -> Vec<u8> {
+    pub fn memory_bytes(handle: MemoryHandle) -> Vec<u8> {
         let mut data = vec![0; handle.offset as usize];
         unsafe { extism_load(handle.offset, &mut data) };
         data
     }
 
-    fn memory_length(offs: u64) -> u64 {
+    pub fn memory_length(offs: u64) -> u64 {
         unsafe { extism_length(offs) }
     }
     /// Load data from memory into a `u8` slice
@@ -72,7 +72,8 @@ impl Memory {
 
     /// Allocate a new block with an encoded value
     pub fn new<'a, T: ToBytes<'a>>(x: &T) -> Result<Self, Error> {
-        let data = x.to_bytes()?.as_ref();
+        let data = x.to_bytes()?;
+        let data = data.as_ref();
         let length = data.len() as u64;
         let offset = unsafe { extism_alloc(length) };
         unsafe { extism_store(offset, &data) };
@@ -81,7 +82,7 @@ impl Memory {
 
     /// Create a memory block and copy bytes from `u8` slice
     pub fn from_bytes(data: impl AsRef<[u8]>) -> Result<Self, Error> {
-        let mut memory = Memory::new(&data.as_ref())?;
+        let memory = Memory::new(&data.as_ref())?;
         Ok(memory)
     }
 
@@ -99,7 +100,7 @@ impl Memory {
     }
 
     /// Store memory as function output
-    pub fn set_output(mut self) {
+    pub fn set_output(self) {
         unsafe {
             extism_output_set(self.0.offset, self.0.length);
         }
@@ -117,8 +118,8 @@ impl Memory {
         }
     }
 
-    pub fn to<'a, T: FromBytes<'a>>(&self) -> Result<T, Error> {
-        T::from_bytes(&self.to_vec())
+    pub fn to<'a, T: FromBytesOwned>(&self) -> Result<T, Error> {
+        T::from_bytes_owned(&self.to_vec())
     }
 
     pub fn find(offs: u64) -> Option<Memory> {

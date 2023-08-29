@@ -19,6 +19,15 @@ impl ToMemory for Memory {
     }
 }
 
+impl<'a> ToMemory for &'a Memory {
+    fn to_memory(&self) -> Result<Memory, Error> {
+        Ok(Memory(MemoryHandle {
+            offset: self.offset(),
+            length: self.len() as u64,
+        }))
+    }
+}
+
 #[cfg(feature = "http")]
 impl ToMemory for HttpResponse {
     fn to_memory(&self) -> Result<Memory, Error> {
@@ -26,39 +35,9 @@ impl ToMemory for HttpResponse {
     }
 }
 
-impl ToMemory for () {
+impl<'a, T: ToBytes<'a>> ToMemory for T {
     fn to_memory(&self) -> Result<Memory, Error> {
-        Ok(Memory::null())
-    }
-}
-
-impl ToMemory for Vec<u8> {
-    fn to_memory(&self) -> Result<Memory, Error> {
-        Memory::from_bytes(self)
-    }
-}
-
-impl ToMemory for &[u8] {
-    fn to_memory(&self) -> Result<Memory, Error> {
-        Memory::from_bytes(self)
-    }
-}
-
-impl ToMemory for String {
-    fn to_memory(&self) -> Result<Memory, Error> {
-        Memory::from_bytes(self)
-    }
-}
-
-impl ToMemory for &str {
-    fn to_memory(&self) -> Result<Memory, Error> {
-        Memory::from_bytes(self)
-    }
-}
-
-impl ToMemory for json::Value {
-    fn to_memory(&self) -> Result<Memory, Error> {
-        Memory::from_bytes(serde_json::to_vec(self)?)
+        Memory::from_bytes(self.to_bytes()?)
     }
 }
 
@@ -66,16 +45,7 @@ impl ToMemory for Base64 {
     fn to_memory(&self) -> Result<Memory, Error> {
         base64::engine::general_purpose::STANDARD
             .encode(&self.0)
+            .as_str()
             .to_memory()
-    }
-}
-
-impl ToMemory for u64 {
-    fn to_memory(&self) -> Result<Memory, Error> {
-        let length = unsafe { bindings::extism_length(*self) };
-        Ok(Memory(MemoryHandle {
-            length,
-            offset: *self,
-        }))
     }
 }

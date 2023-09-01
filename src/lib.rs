@@ -16,6 +16,7 @@ pub mod http;
 pub use anyhow::Error;
 pub(crate) use bindings::*;
 pub use extism_convert::*;
+pub use extism_convert::{FromBytes, FromBytesOwned, ToBytes};
 pub use extism_pdk_derive::{host_fn, plugin_fn};
 pub use memory::Memory;
 pub use to_memory::ToMemory;

@@ -70,7 +70,7 @@ pub fn plugin_fn(
                         return rc.1;
                     }
                 };
-                unwrap!(extism_pdk::output(&output));
+                extism_pdk::unwrap!(extism_pdk::output(&output));
                 0
             }
         }
@@ -95,7 +95,7 @@ pub fn plugin_fn(
                         return rc.1;
                     }
                 };
-                unwrap!(extism_pdk::output(&output));
+                extism_pdk::unwrap!(extism_pdk::output(&output));
                 0
             }
         }

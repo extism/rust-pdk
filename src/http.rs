@@ -37,17 +37,20 @@ pub fn request<T: ToMemory>(
     body: Option<T>,
 ) -> Result<HttpResponse, Error> {
     let enc = serde_json::to_vec(req)?;
-    let req = Memory::from_bytes(enc);
+    let req = Memory::from_bytes(enc)?;
     let body = match body {
         Some(b) => Some(b.to_memory()?),
         None => None,
     };
-    let data = body.as_ref().map(|x| x.offset).unwrap_or(0);
-    let offs = unsafe { extism_http_request(req.offset, data) };
+    let data = body.as_ref().map(|x| x.offset()).unwrap_or(0);
+    let offs = unsafe { extism_http_request(req.offset(), data) };
     let status = unsafe { extism_http_status_code() };
     let len = unsafe { extism_length(offs) };
     Ok(HttpResponse {
-        memory: Memory::wrap(offs, len, true),
+        memory: Memory(MemoryHandle {
+            offset: offs,
+            length: len,
+        }),
         status: status as u16,
     })
 }

@@ -5,8 +5,7 @@ mod macros;
 
 pub mod bindings;
 pub mod config;
-mod from_bytes;
-mod memory;
+pub mod memory;
 mod to_memory;
 pub mod var;
 
@@ -16,8 +15,9 @@ pub mod http;
 
 pub use anyhow::Error;
 pub(crate) use bindings::*;
-pub use extism_pdk_derive::{encoding, host_fn, plugin_fn};
-pub use from_bytes::FromBytes;
+pub use extism_convert::*;
+pub use extism_convert::{FromBytes, FromBytesOwned, ToBytes};
+pub use extism_pdk_derive::{host_fn, plugin_fn};
 pub use memory::Memory;
 pub use to_memory::ToMemory;
 
@@ -44,34 +44,28 @@ pub enum LogLevel {
 /// Re-export of `serde_json`
 pub use serde_json as json;
 
-use crate as extism_pdk;
-
-/// JSON encoding
-#[encoding(serde_json::to_vec, serde_json::from_slice)]
-pub struct Json;
-
-/// MsgPack encoding
-#[cfg_attr(
-    feature = "msgpack",
-    encoding(rmp_serde::to_vec, rmp_serde::from_slice)
-)]
-pub struct MsgPack;
-
-/// Base64 conversion
+/// Base64 string
 pub struct Base64(pub String);
 
-/// Get input from host
-pub fn input<T: FromBytes>() -> Result<T, Error> {
-    unsafe { T::from_bytes(extism_load_input()) }
+/// Get input bytes from host
+pub fn input_bytes() -> Vec<u8> {
+    unsafe { extism_load_input() }
+}
+
+/// Get input bytes from host and convert into `T`
+pub fn input<T: FromBytesOwned>() -> Result<T, Error> {
+    let data = input_bytes();
+    T::from_bytes_owned(&data)
 }
 
 /// Set output for host
-pub fn output(data: impl ToMemory) -> Result<(), Error> {
-    data.to_memory()?.set_output();
+pub fn output<'a, T: ToMemory>(data: T) -> Result<(), Error> {
+    let data = data.to_memory()?;
+    data.set_output();
     Ok(())
 }
 
-pub struct WithReturnCode<T>(T, i32);
+pub struct WithReturnCode<T>(pub T, pub i32);
 
 impl<E: Into<Error>> From<E> for WithReturnCode<Error> {
     fn from(value: E) -> Self {

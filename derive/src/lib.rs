@@ -1,12 +1,12 @@
 use quote::quote;
-use syn::{parse_macro_input, ItemFn, ItemForeignMod, ItemStruct};
+use syn::{parse_macro_input, ItemFn, ItemForeignMod};
 
 /// `plugin_fn` is used to define a function that will be exported by a plugin
 ///
 /// It should be added to a function you would like to export, the function should
 /// accept a parameter that implements `extism_pdk::FromBytes` and return a
 /// `extism_pdk::FnResult` that contains a value that implements
-/// `extism_pdk::ToMemory`.
+/// `extism_pdk::ToBytes`.
 #[proc_macro_attribute]
 pub fn plugin_fn(
     _attr: proc_macro::TokenStream,
@@ -26,9 +26,7 @@ pub fn plugin_fn(
     let output = &mut function.sig.output;
     let block = &function.block;
 
-    if inputs.is_empty() {
-        panic!("extism_pdk::plugin_fn expects a function with one argument, `()` may be used if no input is needed");
-    }
+    let no_args = inputs.is_empty();
 
     if name == "main" {
         panic!(
@@ -53,21 +51,56 @@ pub fn plugin_fn(
         }
     }
 
-    quote! {
-        #[no_mangle]
-        pub #constness #unsafety extern "C" fn #name() -> i32 {
-            #constness #unsafety fn inner #generics(#inputs) #output {
-                #block
-            }
+    if no_args {
+        quote! {
+            #[no_mangle]
+            pub #constness #unsafety extern "C" fn #name() -> i32 {
+                #constness #unsafety fn inner #generics() #output {
+                    #block
+                }
 
-            let input = extism_pdk::unwrap!(extism_pdk::input());
-            let output = extism_pdk::unwrap!(inner(input));
-            let status = output.status();
-            unwrap!(extism_pdk::output(output));
-            0
+                let output = match inner() {
+                    Ok(x) => x,
+                    Err(rc) => {
+                        let err = format!("{:?}", rc.0);
+                        let mut mem = extism_pdk::Memory::from_bytes(&err).unwrap();
+                        unsafe {
+                            extism_pdk::bindings::extism_error_set(mem.offset());
+                        }
+                        return rc.1;
+                    }
+                };
+                extism_pdk::unwrap!(extism_pdk::output(&output));
+                0
+            }
         }
+        .into()
+    } else {
+        quote! {
+            #[no_mangle]
+            pub #constness #unsafety extern "C" fn #name() -> i32 {
+                #constness #unsafety fn inner #generics(#inputs) #output {
+                    #block
+                }
+
+                let input = extism_pdk::unwrap!(extism_pdk::input());
+                let output = match inner(input) {
+                    Ok(x) => x,
+                    Err(rc) => {
+                        let err = format!("{:?}", rc.0);
+                        let mut mem = extism_pdk::Memory::from_bytes(&err).unwrap();
+                        unsafe {
+                            extism_pdk::bindings::extism_error_set(mem.offset());
+                        }
+                        return rc.1;
+                    }
+                };
+                extism_pdk::unwrap!(extism_pdk::output(&output));
+                0
+            }
+        }
+        .into()
     }
-    .into()
 }
 
 /// `host_fn` is used to define a host function that will be callable from within a plugin
@@ -158,7 +191,7 @@ pub fn host_fn(
                             syn::Pat::Ident(i) => {
                                 if is_ptr {
                                     into_inputs.push(
-                                        quote!(extism_pdk::ToMemory::to_memory(&#i)?.keep().offset),
+                                        quote!(extism_pdk::ToMemory::to_memory(&&#i)?.offset()),
                                     );
                                 } else {
                                     into_inputs.push(quote!(#i));
@@ -195,7 +228,7 @@ pub fn host_fn(
 
                     #vis unsafe fn #name #generics (#original_inputs) -> Result<#output, extism_pdk::Error> {
                         let res = extism_pdk::Memory::from(#impl_name(#(#into_inputs),*));
-                        <#output as extism_pdk::FromBytes>::from_bytes(res.to_vec())
+                        <#output as extism_pdk::FromBytes>::from_bytes(&res.to_vec())
                     }
                 };
             } else {
@@ -214,64 +247,4 @@ pub fn host_fn(
     }
 
     gen.into()
-}
-
-struct Args {
-    arg: Vec<syn::Path>,
-}
-
-impl syn::parse::Parse for Args {
-    fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
-        let args =
-            syn::punctuated::Punctuated::<syn::Path, syn::Token![,]>::parse_terminated(input)?;
-        Ok(Args {
-            arg: args.into_iter().collect(),
-        })
-    }
-}
-
-/// `encoding` is used to add a new serde encoder/decoder. It accepts two parameters:
-/// 1) path to serialization function
-/// 2) path to deserialization function
-///
-/// ```rust,ignore
-/// #[encoding(serde_json::to_vec, serde_json::from_slice)]]
-/// pub struct Json;
-/// ```
-#[proc_macro_attribute]
-pub fn encoding(
-    attr: proc_macro::TokenStream,
-    item: proc_macro::TokenStream,
-) -> proc_macro::TokenStream {
-    let item = parse_macro_input!(item as ItemStruct);
-    let args = parse_macro_input!(attr as Args);
-
-    if args.arg.len() != 2 {
-        panic!("extism_pdk::encoding expects 2 arguments (encoding function and decoding function) but got {}", args.arg.len())
-    }
-
-    let vis = item.vis;
-    let name = &item.ident;
-
-    let encode = &args.arg[0];
-    let decode = &args.arg[1];
-
-    quote! {
-        #vis struct #name<T>(pub T);
-
-        impl<T: serde::de::DeserializeOwned> extism_pdk::FromBytes for #name<T> {
-            fn from_bytes(d: Vec<u8>) -> Result<Self, extism_pdk::Error> {
-                let x = #decode(&d)?;
-                Ok(#name(x))
-            }
-        }
-
-        impl<T: serde::Serialize> extism_pdk::ToMemory for #name<T> {
-            fn to_memory(&self) -> Result<extism_pdk::Memory, extism_pdk::Error> {
-                let x = #encode(&self.0)?;
-                Ok(extism_pdk::Memory::from_bytes(x))
-            }
-        }
-    }
-    .into()
 }

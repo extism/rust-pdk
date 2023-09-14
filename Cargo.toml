@@ -14,7 +14,7 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 extism-pdk-derive = {path = "./derive", version = "0.3.1"}
 extism-manifest = {version = "0.5.0", optional = true}
-extism-convert = {git = "https://github.com/extism/extism", branch = "convert-crate", version = "0.1"}
+extism-convert = {git = "https://github.com/extism/extism", version = "0.1"} # TODO: change this after extism-convert has been released
 base64 = "0.21.0"
 
 [features]

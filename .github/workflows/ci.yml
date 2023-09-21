@@ -11,6 +11,7 @@ jobs:
           - stable
     steps:
       - uses: actions/checkout@v3
+      - uses: ./.github/actions/libextism
 
       - name: Install Rust
         uses: actions-rs/toolchain@v1
@@ -20,30 +21,6 @@ jobs:
 
       - name: Install wasm32 target
         run: rustup target add wasm32-unknown-unknown
-
-      - name: Setup Python env
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.9"
-          check-latest: true
-
-      - name: Install Poetry
-        uses: snok/install-poetry@v1
-
-      - name: Checkout extism/cli
-        uses: actions/checkout@v3
-        with:
-          repository: extism/cli
-          path: cli
-
-      - name: Install Extism & CLI
-        run: |
-          pushd cli
-          pip3 install cffi
-          pip3 install .
-          popd
-
-          extism install git
 
       - name: Build plugins
         run: make -B plugins

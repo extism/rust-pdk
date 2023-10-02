@@ -121,11 +121,28 @@ pub fn add(Json(add): Json<Add>) -> FnResult<Json<Sum>> {
 
 ### Raw Export Interface
 
-`plugin_fn` is a nice macro abstraction but there may be times where you want more control. You can code directly to the raw interface of exports.
+`plugin_fn` is a nice macro abstraction but there may be times where you want more control. You can code directly to the raw ABI interface of export functions.
 
-> TODO i've actually forgotten what this looks like, expand it and write out a useful example
 ```rust
-pub const unsafe extern "C" fn greet() -> i32 {
+#[no_mangle]
+pub unsafe extern "C" fn greet() -> i32 {
+    let name_bytes = extism_load_input();
+    let name = from_utf8(&name_bytes);
+
+    match name {
+        Err(e) => {
+            let err = format!("{:?}", e);
+            let mem = Memory::from_bytes(&err);
+            extism_error_set(mem.offset);
+            1i32
+        }
+        Ok(n) => {
+            let result = format!("Hello, {}!", n);
+            let mem = Memory::from_bytes(result);
+            mem.set_output();
+            0i32
+        }
+    }
 }
 ```
 

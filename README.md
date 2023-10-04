@@ -206,12 +206,10 @@ pub fn log_stuff(_: ()) -> FnResult<()> {
 }
 ```
 
-> TODO: why doesn't this log out info?
-
 From [Extism CLI](https://github.com/extism/cli):
 
 ```bash
-extism call my_plugin.wasm log_stuff
+extism call my_plugin.wasm log_stuff --log-level=info
 2023/09/30 11:52:17 Some info!
 2023/09/30 11:52:17 A warning!
 2023/09/30 11:52:17 An error!

@@ -53,6 +53,8 @@ extism call target/wasm32-unknown-unknown/debug/my_plugin.wasm greet --input "Be
 # => Hello, Benjamin!
 ```
 
+> **Note**: We also have a web-based, plug-in tester called the [Extism Playground](https://playground.extism.org/)
+
 ### More About Exports
 
 Adding the `plugin_fn` macro to your function does a couple things. It exposes your function as an export and it handles some of the lower level ABI details that allow you to declare your Wasm function as if it were a normal rust function. Here are a few examples of exports you can define.

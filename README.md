@@ -55,14 +55,14 @@ extism call target/wasm32-unknown-unknown/debug/my_plugin.wasm greet --input "Be
 
 ### More About Exports
 
-Adding the `plugin_fn` macro to your function does a couple things. It exposes your function as an export and it handles some of the lower level ABI details that allow you to express the high level types of your params and returns. Here are a few examples of exports you can define.
+Adding the `plugin_fn` macro to your function does a couple things. It exposes your function as an export and it handles some of the lower level ABI details that allow you to declare your Wasm function as if it were a normal rust function. Here are a few examples of exports you can define.
 
 ### Primitive Types
 
 A common thing you may want to do is pass some primitive rust data back and forth.
 The `plugin_fn` macro can map these types for you:
 
-> TODO maybe link to docs.rs for convert here?
+> TODO maybe link to docs.rs for convert here instead?
 
 > **Note**: The `plugin_fn` macro uses the [convert crate](https://github.com/extism/extism/tree/main/convert) to automatically convert and pass types across the guest / host boundary.
 
@@ -73,7 +73,7 @@ pub fn add_pi(input: f32) -> FnResult<f64> {
     Ok(input as f64 + 3.14f64)
 }
 
-// i32 and i64
+// i32, i64, u32, u64
 #[plugin_fn]
 pub fn sum_42(input: i32) -> FnResult<i64> {
     Ok(input as i64 + 42i64)
@@ -149,7 +149,7 @@ pub unsafe extern "C" fn greet() -> i32 {
 ## Configs
 
 Configs are key-value pairs that can be passed in by the host when creating a
-plug-in. These can be useful to statically configure the plug-in with some config that exists across every function call. Here is a trivial example:
+plug-in. These can be useful to statically configure the plug-in with some data that exists across every function call. Here is a trivial example:
 
 ```rust
 #[plugin_fn]
@@ -194,6 +194,11 @@ Because Wasm modules by default do not have access to the system, printing to st
 ```rust
 #[plugin_fn]
 pub fn log_stuff(_: ()) -> FnResult<()> {
+    info!("Some info!");
+    warn!("A warning!");
+    error!("An error!");
+
+    // optionally you can use the log! macro
     log!(LogLevel::Info, "Some info!");
     log!(LogLevel::Warn, "A warning!");
     log!(LogLevel::Error, "An error!");

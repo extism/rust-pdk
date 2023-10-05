@@ -37,7 +37,7 @@ pub fn greet(name: String) -> FnResult<String> {
 }
 ```
 
-Since we don't need any system access for this, we can compile this to the lightweight `wasm32-unknown-uknown` target instead of using the `wasm32-wasi` target:
+Since we don't need any system access for this, we can compile this to the lightweight `wasm32-unknown-unknown` target instead of using the `wasm32-wasi` target:
 
 ```bash
 cargo build --target wasm32-unknown-unknown

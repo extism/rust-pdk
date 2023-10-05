@@ -1,5 +1,5 @@
 # Extism Rust PDK
-![crates.io](https://img.shields.io/crates/v/extism_pdk.svg)
+[![crates.io](https://img.shields.io/crates/v/extism_pdk.svg)](https://crates.io/crates/extism-pdk)
 
 This library can be used to write [Extism Plug-ins](https://extism.org/docs/concepts/plug-in) in Rust.
 

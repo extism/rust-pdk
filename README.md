@@ -1,4 +1,5 @@
 # Extism Rust PDK
+
 [![crates.io](https://img.shields.io/crates/v/extism_pdk.svg)](https://crates.io/crates/extism-pdk)
 
 This library can be used to write [Extism Plug-ins](https://extism.org/docs/concepts/plug-in) in Rust.
@@ -63,8 +64,6 @@ Adding the [plugin_fn](https://docs.rs/extism-pdk/latest/extism_pdk/attr.plugin_
 
 A common thing you may want to do is pass some primitive rust data back and forth.
 The [plugin_fn](https://docs.rs/extism-pdk/latest/extism_pdk/attr.plugin_fn.html) macro can map these types for you:
-
-> TODO maybe link to docs.rs for convert here instead?
 
 > **Note**: The [plugin_fn](https://docs.rs/extism-pdk/latest/extism_pdk/attr.plugin_fn.html) macro uses the [convert crate](https://github.com/extism/extism/tree/main/convert) to automatically convert and pass types across the guest / host boundary.
 

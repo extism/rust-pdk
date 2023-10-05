@@ -129,20 +129,18 @@ pub fn add(Json(add): Json<Add>) -> FnResult<Json<Sum>> {
 ```rust
 #[no_mangle]
 pub unsafe extern "C" fn greet() -> i32 {
-    let name_bytes = extism_load_input();
-    let name = from_utf8(&name_bytes);
+    let name = input::<String>();
 
     match name {
         Err(e) => {
             let err = format!("{:?}", e);
-            let mem = Memory::from_bytes(&err);
-            extism_error_set(mem.offset);
+            let mem = Memory::from_bytes(&err).unwrap();
+            extism_error_set(mem.offset());
             1i32
         }
         Ok(n) => {
             let result = format!("Hello, {}!", n);
-            let mem = Memory::from_bytes(result);
-            mem.set_output();
+            output(result).unwrap();
             0i32
         }
     }

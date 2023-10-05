@@ -37,14 +37,13 @@ pub fn greet(name: String) -> FnResult<String> {
 }
 ```
 
-You since we don't need any system access for this, we can compile this to the
-bare wasm32-unknown-uknown target instead of using the wasi target:
+Since we don't need any system access for this, we can compile this to the lightweight `wasm32-unknown-uknown` target instead of using the `wasm32-wasi` target:
 
 ```bash
-cargo build --target wasm32-unknown-uknown
+cargo build --target wasm32-unknown-unknown
 ```
 
-This will put your compiled wasm in `target/wasm32-unknown-uknown/debug`.
+This will put your compiled wasm in `target/wasm32-unknown-unknown/debug`.
 We can now test it using the [Extism CLI](https://github.com/extism/cli)'s `run`
 command:
 
@@ -57,16 +56,16 @@ extism call target/wasm32-unknown-unknown/debug/my_plugin.wasm greet --input "Be
 
 ### More About Exports
 
-Adding the `plugin_fn` macro to your function does a couple things. It exposes your function as an export and it handles some of the lower level ABI details that allow you to declare your Wasm function as if it were a normal rust function. Here are a few examples of exports you can define.
+Adding the [plugin_fn](https://docs.rs/extism-pdk/latest/extism_pdk/attr.plugin_fn.html) macro to your function does a couple things. It exposes your function as an export and it handles some of the lower level ABI details that allow you to declare your Wasm function as if it were a normal rust function. Here are a few examples of exports you can define.
 
 ### Primitive Types
 
 A common thing you may want to do is pass some primitive rust data back and forth.
-The `plugin_fn` macro can map these types for you:
+The [plugin_fn](https://docs.rs/extism-pdk/latest/extism_pdk/attr.plugin_fn.html) macro can map these types for you:
 
 > TODO maybe link to docs.rs for convert here instead?
 
-> **Note**: The `plugin_fn` macro uses the [convert crate](https://github.com/extism/extism/tree/main/convert) to automatically convert and pass types across the guest / host boundary.
+> **Note**: The [plugin_fn](https://docs.rs/extism-pdk/latest/extism_pdk/attr.plugin_fn.html) macro uses the [convert crate](https://github.com/extism/extism/tree/main/convert) to automatically convert and pass types across the guest / host boundary.
 
 ```rust
 // f32 and f64
@@ -90,7 +89,7 @@ pub fn process_bytes(input: Vec<u8>) -> FnResult<Vec<u8>> {
 
 // empty unit
 // be aware that plugin_fn expects params, so for a void func
-// us this empty unit
+// use this empty unit
 #[plugin_fn]
 pub fn hello(_: ()) -> FnResult<String> {
     Ok("Hello, World!".into())
@@ -99,8 +98,8 @@ pub fn hello(_: ()) -> FnResult<String> {
 
 ### Json
 
-We provide a Json type that allows you to pass structs
-that implement serde::Deserialize as paramters and serde::Serialize
+We provide a [Json](https://docs.rs/extism-pdk/latest/extism_pdk/struct.Json.html) type that allows you to pass structs
+that implement serde::Deserialize as parameters and serde::Serialize
 as returns:
 
 ```rust
@@ -123,7 +122,9 @@ pub fn add(Json(add): Json<Add>) -> FnResult<Json<Sum>> {
 
 ### Raw Export Interface
 
-`plugin_fn` is a nice macro abstraction but there may be times where you want more control. You can code directly to the raw ABI interface of export functions.
+[plugin_fn](https://docs.rs/extism-pdk/latest/extism_pdk/attr.plugin_fn.html) is a nice macro abstraction but there may be times where you want more control. You can code directly to the raw ABI interface of export functions.
+
+> TODO: how do i use unwrap! here?
 
 ```rust
 #[no_mangle]
@@ -172,38 +173,34 @@ extism call my_plugin.wasm greet --config user=Benjamin
 
 Variables are another key-value mechanism but it's a mutable data store that
 will persist across function calls. These variables will persist as long as the
-host has loaded and not freed the plug-in:
-
-> TODO make this work:
+host has loaded and not freed the plug-in. You can use [var::get](https://docs.rs/extism-pdk/latest/extism_pdk/var/fn.get.html) and [var::set](https://docs.rs/extism-pdk/latest/extism_pdk/var/fn.set.html) to manipulate them.
 
 ```rust
 #[plugin_fn]
 pub fn count(_: ()) -> FnResult<i64> {
-    let mut c = match var::get("count")? {
-        Some(c) => c,
-        None => 0,
-    };
+    let mut c = var::get("count")?.unwrap_or(0);
     c = c + 1;
-    set_var!("count", c);
+    var::set("count", c)?;
     Ok(c)
 }
 ```
 
 ## Logging
 
-Because Wasm modules by default do not have access to the system, printing to stdout won't work (unless you use WASI). Extism provides some simple logging macros that allow you to use the host application to log without having to give the plug-in permission to make syscalls.
+Because Wasm modules by default do not have access to the system, printing to stdout won't work (unless you use WASI). Extism provides some simple logging macros that allow you to use the host application to log without having to give the plug-in permission to make syscalls. The primary one is [log!](https://docs.rs/extism-pdk/latest/extism_pdk/macro.log.html) but we also have some convenience macros named by log level:
 
 ```rust
 #[plugin_fn]
 pub fn log_stuff(_: ()) -> FnResult<()> {
+    log!(LogLevel::Info, "Some info!");
+    log!(LogLevel::Warn, "A warning!");
+    log!(LogLevel::Error, "An error!");
+
+    // optionally you can use the leveled macros: 
     info!("Some info!");
     warn!("A warning!");
     error!("An error!");
 
-    // optionally you can use the log! macro
-    log!(LogLevel::Info, "Some info!");
-    log!(LogLevel::Warn, "A warning!");
-    log!(LogLevel::Error, "An error!");
     Ok(())
 }
 ```
@@ -217,8 +214,7 @@ extism call my_plugin.wasm log_stuff --log-level=info
 2023/09/30 11:52:17 An error!
 ```
 
-> TODO: is there some place we can link to here?
-From the host, you need to make sure that you set a log file to stdout or some file location.
+> *Note*: From the CLI you need to pass a level with `--log-level`. If you are running the plug-in in your own host using one of our SDKs, you need to make sure that you call `set_log_file` to `"stdout"` or some file location.
 
 ## HTTP
 
@@ -251,14 +247,14 @@ to do this correctly. So we recommend reading out [concept doc on Host Functions
 
 Host functions have a similar interface as exports. You just need to declare them as `extern` on the top of your `lib.rs`. You only declare the interface as it is the host's responsibility to provide the implementation:
 
-> TODO maybe link again to docs.rs for convert here to remind people what types work?
-
 ```rust
 #[host_fn]
 extern "ExtismHost" {
     fn a_python_func(input: String) -> String; 
 }
 ```
+
+> **Note**: The types we accept here are the same as the exports as the interface also uses the [convert crate](https://docs.rs/extism-convert/latest/extism_convert/).
 
 To call this function, we must use the `unsafe` keyword. Also note that it automatically wraps the
 function return with a Result in case the call fails.

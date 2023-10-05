@@ -2,6 +2,9 @@
 
 This library can be used to write [Extism Plug-ins](https://extism.org/docs/concepts/plug-in) in Rust.
 
+* Crate: ![crates.io](https://img.shields.io/crates/v/extism_pdk.svg)
+* Docs: ![docs.rs](https://img.shields.io/docsrs/v/extism_pdk.svg)
+
 ## Install
 
 Make sure you generate a `lib` project:

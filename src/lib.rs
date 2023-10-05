@@ -4,9 +4,13 @@ pub use std::arch::wasm32::v128;
 mod macros;
 
 pub mod bindings;
-pub mod config;
 pub mod memory;
 mod to_memory;
+
+/// Functions to read plug-in config
+pub mod config;
+
+/// Functions to manipulate plug-in variables
 pub mod var;
 
 #[cfg(feature = "http")]

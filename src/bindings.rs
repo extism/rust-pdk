@@ -1,3 +1,4 @@
+#[link(wasm_import_module = "extism:env")]
 extern "C" {
     pub fn extism_input_length() -> u64;
     pub fn extism_input_load_u8(offs: u64) -> u8;

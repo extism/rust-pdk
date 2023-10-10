@@ -95,7 +95,7 @@ pub fn process_bytes(input: Vec<u8>) -> FnResult<Vec<u8>> {
 
 // Strings
 #[plugin_fn]
-pub fn process_bytes(input: String) -> FnResult<String> {
+pub fn process_string(input: String) -> FnResult<String> {
     // process string here
     Ok(input)
 }

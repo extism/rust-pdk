@@ -134,7 +134,7 @@ plug-in. These can be useful to statically configure the plug-in with some data 
 
 ```rust
 #[plugin_fn]
-pub fn greet(_: ()) -> FnResult<String> {
+pub fn greet() -> FnResult<String> {
     let user = config::get("user").expect("'user' key set in config");
     Ok(format!("Hello, {}!", user))
 }

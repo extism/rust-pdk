@@ -169,7 +169,7 @@ Because Wasm modules by default do not have access to the system, printing to st
 
 ```rust
 #[plugin_fn]
-pub fn log_stuff(_: ()) -> FnResult<()> {
+pub fn log_stuff() -> FnResult<()> {
     log!(LogLevel::Info, "Some info!");
     log!(LogLevel::Warn, "A warning!");
     log!(LogLevel::Error, "An error!");

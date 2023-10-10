@@ -2,11 +2,11 @@
 
 [![crates.io](https://img.shields.io/crates/v/extism_pdk.svg)](https://crates.io/crates/extism-pdk)
 
-This library can be used to write [Extism Plug-ins](https://extism.org/docs/concepts/plug-in) in Rust.
+This library can be used to write [Extism Plug-ins](https://extism.org/docs/concepts/pdk) in Rust.
 
 ## Install
 
-Make sure you generate a `lib` project:
+Generate a `lib` project with Cargo:
 
 ```bash
 cargo new --lib my-plugin
@@ -18,7 +18,7 @@ Add the library from [crates.io](https://crates.io/crates/extism-pdk).
 cargo add extism-pdk
 ```
 
-Change your `Cargo.toml` to set the crate-type to `cdylib`:
+Change your `Cargo.toml` to set the crate-type to `cdylib` (this instructs the compiler to produce a Wasm file):
 
 ```toml
 [lib]
@@ -27,7 +27,7 @@ crate_type = ["cdylib"]
 
 ## Getting Started
 
-The goal of writing an [Extism plug-in](https://extism.org/docs/concepts/plug-in) is to compile the your rust code to a Wasm module with some special export functions that the host application can invoke. The first thing you should understand is creating an export. Let's write a simple program that exports a `greet` function which will take a name as a string and return a greeting string:
+The goal of writing an [Extism plug-in](https://extism.org/docs/concepts/pdk) is to compile your Rust code to a Wasm module with exported functions that the host application can invoke. The first thing you should understand is creating an export. Let's write a simple program that exports a `greet` function which will take a name as a string and return a greeting string. For this, we use the `#[plugin_fn]` macro on our exported function:
 
 
 ```rust
@@ -64,11 +64,11 @@ extism call target/wasm32-unknown-unknown/debug/my_plugin.wasm greet --input "Be
 
 ### More About Exports
 
-Adding the [plugin_fn](https://docs.rs/extism-pdk/latest/extism_pdk/attr.plugin_fn.html) macro to your function does a couple things. It exposes your function as an export and it handles some of the lower level ABI details that allow you to declare your Wasm function as if it were a normal rust function. Here are a few examples of exports you can define.
+Adding the [plugin_fn](https://docs.rs/extism-pdk/latest/extism_pdk/attr.plugin_fn.html) macro to your function does a couple things. It exposes your function as an export and it handles some of the lower level ABI details that allow you to declare your Wasm function as if it were a normal Rust function. Here are a few examples of exports you can define.
 
 ### Primitive Types
 
-A common thing you may want to do is pass some primitive rust data back and forth.
+A common thing you may want to do is pass some primitive Rust data back and forth.
 The [plugin_fn](https://docs.rs/extism-pdk/latest/extism_pdk/attr.plugin_fn.html) macro can map these types for you:
 
 > **Note**: The [plugin_fn](https://docs.rs/extism-pdk/latest/extism_pdk/attr.plugin_fn.html) macro uses the [convert crate](https://github.com/extism/extism/tree/main/convert) to automatically convert and pass types across the guest / host boundary.
@@ -225,7 +225,7 @@ pub fn http_get(Json(req): Json<HttpRequest>) -> FnResult<HttpResponse> {
 
 Like any other code module, Wasm not only let's you export functions to the outside world, you can
 import them too. Host Functions allow a plug-in to import functions defined in the host. For example,
-if you host application is written in python, it can pass a python function down to your rust plug-in
+if you host application is written in Python, it can pass a Python function down to your Rust plug-in
 where you can invoke it.
 
 This topic can get fairly complicated and we have not yet fully abstracted the Wasm knowledge you need
@@ -259,8 +259,7 @@ pub fn hello_from_python() -> FnResult<String> {
 ### Testing it out
 
 We can't really test this from the Extism CLI as something must provide the implementation. So let's
-write out the python side here. You should check the docs for the language you're using on the host side
-for how to implement host functions.
+write out the Python side here. Check out the [docs for the host SDKs](https://extism.org/docs/category/integrate-into-your-codebase) to implement a host function in a language of your choice.
 
 ```python
 from extism import host_fn, Function, ValType
@@ -270,8 +269,8 @@ def a_python_func(plugin, input_, output, _user_data):
     # The plug-in is passing us a string
     input_str = plugin.input_string(input_[0])
 
-    # just printing this out to prove we're in python land
-    print("Hello from python!")
+    # just printing this out to prove we're in Python land
+    print("Hello from Python!")
 
     # let's just add "!" to the input string
     # but you could imagine here we could add some
@@ -306,6 +305,6 @@ python3 app.py
 # => An argument to send to Python!
 ```
 
+### Reach Out!
 
-
-
+Have a question or just want to drop in and say hi? [Hop on the Discord](https://extism.org/discord)!

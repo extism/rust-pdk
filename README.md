@@ -155,7 +155,7 @@ host has loaded and not freed the plug-in. You can use [var::get](https://docs.r
 
 ```rust
 #[plugin_fn]
-pub fn count(_: ()) -> FnResult<i64> {
+pub fn count() -> FnResult<i64> {
     let mut c = var::get("count")?.unwrap_or(0);
     c = c + 1;
     var::set("count", c)?;

@@ -22,9 +22,13 @@ extern "C" {
     pub fn extism_log_error(offs: u64);
 }
 
-/// # Safety
+/// Loads a byte array from Extism's memory. Only use this if you
+/// have already considered the plugin_fn macro as well as the [extism_load_input] function.
 ///
-/// This function is used to access WASM memory
+/// # Arguments
+///
+/// * `offs` - The Extism offset pointer location to the memory
+/// * `data` - The pointer to byte slice result
 pub unsafe fn extism_load(offs: u64, data: &mut [u8]) {
     let ptr = data.as_mut_ptr();
 
@@ -45,9 +49,9 @@ pub unsafe fn extism_load(offs: u64, data: &mut [u8]) {
     }
 }
 
-/// # Safety
-///
-/// This function is used to access WASM memory
+/// Loads the input from the host as a raw byte vec.
+/// Consider using the plugin_fn macro to automatically
+/// handle inputs as function parameters.
 pub unsafe fn extism_load_input() -> Vec<u8> {
     let input_length = extism_input_length();
     let mut data = vec![0; input_length as usize];
@@ -71,9 +75,13 @@ pub unsafe fn extism_load_input() -> Vec<u8> {
     data
 }
 
-/// # Safety
+/// Stores a byte array into Extism's memory.
+/// Only use this after considering []
 ///
-/// This function is used to access WASM memory
+/// # Arguments
+///
+/// * `offs` - The Extism offset pointer location to store the memory
+/// * `data` - The byte array to store at that offset
 pub unsafe fn extism_store(offs: u64, data: &[u8]) {
     let ptr = data.as_ptr();
 

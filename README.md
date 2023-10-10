@@ -45,7 +45,7 @@ Since we don't need any system access for this, we can compile this to the light
 cargo build --target wasm32-unknown-unknown
 ```
 
-> *Note*: You can also put a default target in `.cargo/config.toml`:
+> **Note**: You can also put a default target in `.cargo/config.toml`:
 ```toml
 [build]
 target = "wasm32-unknown-unknown"
@@ -206,12 +206,9 @@ Sometimes it is useful to let a plug-in make HTTP calls.
 
 > **Note**: See [HttpRequest](https://docs.rs/extism-pdk/latest/extism_pdk/struct.HttpRequest.html) docs for more info on the request and response types:
 
-> TODO: let's show a meatier example here:
-
 ```rust
 #[plugin_fn]
 pub fn http_get(Json(req): Json<HttpRequest>) -> FnResult<HttpResponse> {
-    info!("Request to: {}", req.url);
     let res = http::request::<()>(&req, None)?;
     Ok(res)
 }
@@ -246,7 +243,7 @@ function return with a Result in case the call fails.
 
 ```rust
 #[plugin_fn]
-pub fn hello_from_python(_: ()) -> FnResult<String> {
+pub fn hello_from_python() -> FnResult<String> {
     let output = unsafe { a_python_func("An argument to send to Python".into())? };
     Ok(output)
 }
@@ -257,8 +254,6 @@ pub fn hello_from_python(_: ()) -> FnResult<String> {
 We can't really test this from the Extism CLI as something must provide the implementation. So let's
 write out the python side here. You should check the docs for the language you're using on the host side
 for how to implement host functions.
-
-> TODO: update this after we publish and hone new python-sdk
 
 ```python
 from extism import host_fn, Function, ValType
@@ -282,11 +277,6 @@ def a_python_func(plugin, input_, output, _user_data):
 ```
 
 Now when we load the plug-in we pass the host function:
-
-> TODO: we should have an explanation in the host function concept doc that we can link to here
-> that tells people how to determine their host function signature
-
-> TODO: test this code or come up with a simpler runnable example. Maybe there could be something in extism CLI baked in you can use to test host functions or some python script you can use.
  
 ```python
 functions = [

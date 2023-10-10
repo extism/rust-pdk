@@ -138,6 +138,7 @@ pub unsafe extern "C" fn greet() -> i32 {
     unwrap!(output(result));
     0i32
 }
+```
 
 ## Configs
 

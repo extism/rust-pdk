@@ -124,28 +124,15 @@ pub fn add(Json(add): Json<Add>) -> FnResult<Json<Sum>> {
 
 [plugin_fn](https://docs.rs/extism-pdk/latest/extism_pdk/attr.plugin_fn.html) is a nice macro abstraction but there may be times where you want more control. You can code directly to the raw ABI interface of export functions.
 
-> TODO: how do i use unwrap! here?
 
 ```rust
 #[no_mangle]
 pub unsafe extern "C" fn greet() -> i32 {
-    let name = input::<String>();
-
-    match name {
-        Err(e) => {
-            let err = format!("{:?}", e);
-            let mem = Memory::from_bytes(&err).unwrap();
-            extism_error_set(mem.offset());
-            1i32
-        }
-        Ok(n) => {
-            let result = format!("Hello, {}!", n);
-            output(result).unwrap();
-            0i32
-        }
-    }
+    let name = unwrap!(input::<String>());
+    let result = format!("Hello, {}!", name);
+    unwrap!(output(result));
+    0i32
 }
-```
 
 ## Configs
 

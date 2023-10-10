@@ -45,8 +45,8 @@ Since we don't need any system access for this, we can compile this to the light
 cargo build --target wasm32-unknown-unknown
 ```
 
-> *Note*: You can also put a default target in `.cargo/config.yml`:
-> ```yaml
+> *Note*: You can also put a default target in `.cargo/config.toml`:
+> ```toml
 > [build]
 >   target = "wasm32-unknown-unknown"
 > ```

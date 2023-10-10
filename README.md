@@ -46,10 +46,10 @@ cargo build --target wasm32-unknown-unknown
 ```
 
 > *Note*: You can also put a default target in `.cargo/config.toml`:
-> ```toml
-> [build]
-> target = "wasm32-unknown-unknown"
-> ```
+```toml
+[build]
+target = "wasm32-unknown-unknown"
+```
 
 This will put your compiled wasm in `target/wasm32-unknown-unknown/debug`.
 We can now test it using the [Extism CLI](https://github.com/extism/cli)'s `run`

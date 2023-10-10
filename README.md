@@ -87,13 +87,6 @@ pub fn process_bytes(input: Vec<u8>) -> FnResult<Vec<u8>> {
     Ok(input)
 }
 
-// empty unit
-// be aware that plugin_fn expects params, so for a void func
-// use this empty unit
-#[plugin_fn]
-pub fn hello(_: ()) -> FnResult<String> {
-    Ok("Hello, World!".into())
-}
 ```
 
 ### Json

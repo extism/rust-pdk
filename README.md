@@ -2,7 +2,7 @@
 
 [![crates.io](https://img.shields.io/crates/v/extism_pdk.svg)](https://crates.io/crates/extism-pdk)
 
-This library can be used to write [Extism Plug-ins](https://extism.org/docs/concepts/plugin) in Rust.
+This library can be used to write [Extism Plug-ins](https://extism.org/docs/concepts/plug-in) in Rust.
 
 ## Install
 
@@ -27,7 +27,7 @@ crate_type = ["cdylib"]
 
 ## Getting Started
 
-The goal of writing an [Extism plug-in](https://extism.org/docs/concepts/plugin) is to compile your Rust code to a Wasm module with exported functions that the host application can invoke. The first thing you should understand is creating an export. Let's write a simple program that exports a `greet` function which will take a name as a string and return a greeting string. For this, we use the `#[plugin_fn]` macro on our exported function:
+The goal of writing an [Extism plug-in](https://extism.org/docs/concepts/plug-in) is to compile your Rust code to a Wasm module with exported functions that the host application can invoke. The first thing you should understand is creating an export. Let's write a simple program that exports a `greet` function which will take a name as a string and return a greeting string. For this, we use the `#[plugin_fn]` macro on our exported function:
 
 
 ```rust

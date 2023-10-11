@@ -18,7 +18,7 @@ Add the library from [crates.io](https://crates.io/crates/extism-pdk).
 cargo add extism-pdk
 ```
 
-Change your `Cargo.toml` to set the crate-type to `cdylib` (this instructs the compiler to produce a Wasm file):
+Change your `Cargo.toml` to set the crate-type to `cdylib` (this instructs the compiler to produce a dynamic library, which for our target will be a Wasm file):
 
 ```toml
 [lib]
@@ -259,7 +259,7 @@ pub fn hello_from_python() -> FnResult<String> {
 ### Testing it out
 
 We can't really test this from the Extism CLI as something must provide the implementation. So let's
-write out the Python side here. Check out the [docs for the host SDKs](https://extism.org/docs/category/integrate-into-your-codebase) to implement a host function in a language of your choice.
+write out the Python side here. Check out the [docs for Host SDKs](https://extism.org/docs/concepts/host-sdk) to implement a host function in a language of your choice.
 
 ```python
 from extism import host_fn, Function, ValType

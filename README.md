@@ -18,7 +18,7 @@ Add the library from [crates.io](https://crates.io/crates/extism-pdk).
 cargo add extism-pdk
 ```
 
-Change your `Cargo.toml` to set the crate-type to `cdylib` (this instructs the compiler to produce a dynamic library, which for our target will be a Wasm file):
+Change your `Cargo.toml` to set the crate-type to `cdylib` (this instructs the compiler to produce a dynamic library, which for our target will be a Wasm binary):
 
 ```toml
 [lib]

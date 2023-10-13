@@ -65,7 +65,7 @@ pub fn plugin_fn(
                         let err = format!("{:?}", rc.0);
                         let mut mem = extism_pdk::Memory::from_bytes(&err).unwrap();
                         unsafe {
-                            extism_pdk::bindings::extism_error_set(mem.offset());
+                            extism_pdk::extism::error_set(mem.offset());
                         }
                         return rc.1;
                     }
@@ -90,7 +90,7 @@ pub fn plugin_fn(
                         let err = format!("{:?}", rc.0);
                         let mut mem = extism_pdk::Memory::from_bytes(&err).unwrap();
                         unsafe {
-                            extism_pdk::bindings::extism_error_set(mem.offset());
+                            extism_pdk::extism::error_set(mem.offset());
                         }
                         return rc.1;
                     }

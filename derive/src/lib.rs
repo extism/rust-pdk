@@ -209,6 +209,7 @@ pub fn host_fn(
             let link_name = link_name.as_str();
 
             let impl_block = quote! {
+                #[link(wasm_import_module = "extism:env")]
                 extern "C" {
                     #[link_name = #link_name]
                     fn #impl_name(#(#converted_inputs),*) -> #converted_output;

@@ -3,11 +3,11 @@ use crate::*;
 pub fn get_memory(key: impl AsRef<str>) -> Result<Option<Memory>, Error> {
     let mem = Memory::from_bytes(key.as_ref().as_bytes())?;
 
-    let offset = unsafe { extism_var_get(mem.offset()) };
+    let offset = unsafe { extism::var_get(mem.offset()) };
     if offset == 0 {
         return Ok(None);
     }
-    let length = unsafe { extism_length(offset) };
+    let length = unsafe { extism::length(offset) };
 
     if length == 0 {
         return Ok(None);
@@ -55,7 +55,7 @@ pub fn get<T: FromBytesOwned>(key: impl AsRef<str>) -> Result<Option<T>, Error> 
 pub fn set(key: impl AsRef<str>, val: impl ToMemory) -> Result<(), Error> {
     let val = val.to_memory()?;
     let key = Memory::from_bytes(key.as_ref().as_bytes())?;
-    unsafe { extism_var_set(key.offset(), val.offset()) }
+    unsafe { extism::var_set(key.offset(), val.offset()) }
     Ok(())
 }
 
@@ -73,6 +73,6 @@ pub fn set(key: impl AsRef<str>, val: impl ToMemory) -> Result<(), Error> {
 /// ```
 pub fn remove(key: impl AsRef<str>) -> Result<(), Error> {
     let key = Memory::from_bytes(key.as_ref().as_bytes())?;
-    unsafe { extism_var_set(key.offset(), 0) };
+    unsafe { extism::var_set(key.offset(), 0) };
     Ok(())
 }

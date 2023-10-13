@@ -1,7 +1,7 @@
 use crate::*;
 
 /// A HttpResponse is used to wrap the memory returned by
-/// `extism_pdx::http::request`
+/// `extism_pdk::http::request`
 pub struct HttpResponse {
     memory: Memory,
     status: u16,
@@ -43,9 +43,9 @@ pub fn request<T: ToMemory>(
         None => None,
     };
     let data = body.as_ref().map(|x| x.offset()).unwrap_or(0);
-    let offs = unsafe { extism_http_request(req.offset(), data) };
-    let status = unsafe { extism_http_status_code() };
-    let len = unsafe { extism_length(offs) };
+    let offs = unsafe { extism::http_request(req.offset(), data) };
+    let status = unsafe { extism::http_status_code() };
+    let len = unsafe { extism::length(offs) };
     Ok(HttpResponse {
         memory: Memory(MemoryHandle {
             offset: offs,

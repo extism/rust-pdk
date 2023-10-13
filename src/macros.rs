@@ -44,7 +44,7 @@ macro_rules! unwrap {
                 let err = format!("{:?}", e);
                 let mut mem = $crate::Memory::from_bytes(&err).unwrap();
                 unsafe {
-                    $crate::bindings::extism_error_set(mem.offset());
+                    $crate::extism::error_set(mem.offset());
                 }
                 return -1;
             }

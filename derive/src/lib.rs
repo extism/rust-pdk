@@ -109,10 +109,11 @@ pub fn host_fn(
     attr: proc_macro::TokenStream,
     item: proc_macro::TokenStream,
 ) -> proc_macro::TokenStream {
-    let mut namespace = attr.to_string();
-    if namespace.is_empty() {
-        namespace = "extism:user".to_string();
-    }
+    let namespace = if let Ok(ns) = syn::parse::<syn::LitStr>(attr) {
+        ns.value()
+    } else {
+        "extism:user".to_string()
+    };
 
     let item = parse_macro_input!(item as ItemForeignMod);
     if item.abi.name.is_none() || item.abi.name.unwrap().value() != "ExtismHost" {

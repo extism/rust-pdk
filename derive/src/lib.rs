@@ -112,7 +112,7 @@ pub fn host_fn(
     let namespace = if let Ok(ns) = syn::parse::<syn::LitStr>(attr) {
         ns.value()
     } else {
-        "extism:user".to_string()
+        "extism:host/user".to_string()
     };
 
     let item = parse_macro_input!(item as ItemForeignMod);

@@ -6,7 +6,7 @@ pub mod internal {
     use super::*;
 
     pub fn memory_alloc(n: u64) -> MemoryHandle {
-        let length = n as u64;
+        let length = n;
         let offset = unsafe { extism::alloc(length) };
         MemoryHandle { offset, length }
     }
@@ -76,7 +76,7 @@ impl Memory {
         let data = data.as_ref();
         let length = data.len() as u64;
         let offset = unsafe { extism::alloc(length) };
-        unsafe { extism::store(offset, &data) };
+        unsafe { extism::store(offset, data) };
         Ok(Self(MemoryHandle { offset, length }))
     }
 
@@ -118,7 +118,7 @@ impl Memory {
         }
     }
 
-    pub fn to<'a, T: FromBytesOwned>(&self) -> Result<T, Error> {
+    pub fn to<T: FromBytesOwned>(&self) -> Result<T, Error> {
         T::from_bytes_owned(&self.to_vec())
     }
 

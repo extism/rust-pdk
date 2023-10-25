@@ -1,3 +1,5 @@
+#![allow(clippy::missing_safety_doc)]
+
 #[cfg(target_arch = "wasm32")]
 pub use std::arch::wasm32::v128;
 
@@ -62,7 +64,7 @@ pub fn input<T: FromBytesOwned>() -> Result<T, Error> {
 }
 
 /// Set output for host
-pub fn output<'a, T: ToMemory>(data: T) -> Result<(), Error> {
+pub fn output<T: ToMemory>(data: T) -> Result<(), Error> {
     let data = data.to_memory()?;
     data.set_output();
     Ok(())

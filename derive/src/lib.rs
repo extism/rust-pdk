@@ -65,7 +65,7 @@ pub fn plugin_fn(
                         let err = format!("{:?}", rc.0);
                         let mut mem = extism_pdk::Memory::from_bytes(&err).unwrap();
                         unsafe {
-                            extism_pdk::bindings::extism_error_set(mem.offset());
+                            extism_pdk::extism::error_set(mem.offset());
                         }
                         return rc.1;
                     }
@@ -90,7 +90,7 @@ pub fn plugin_fn(
                         let err = format!("{:?}", rc.0);
                         let mut mem = extism_pdk::Memory::from_bytes(&err).unwrap();
                         unsafe {
-                            extism_pdk::bindings::extism_error_set(mem.offset());
+                            extism_pdk::extism::error_set(mem.offset());
                         }
                         return rc.1;
                     }
@@ -106,9 +106,15 @@ pub fn plugin_fn(
 /// `host_fn` is used to define a host function that will be callable from within a plugin
 #[proc_macro_attribute]
 pub fn host_fn(
-    _attr: proc_macro::TokenStream,
+    attr: proc_macro::TokenStream,
     item: proc_macro::TokenStream,
 ) -> proc_macro::TokenStream {
+    let namespace = if let Ok(ns) = syn::parse::<syn::LitStr>(attr) {
+        ns.value()
+    } else {
+        "extism:host/user".to_string()
+    };
+
     let item = parse_macro_input!(item as ItemForeignMod);
     if item.abi.name.is_none() || item.abi.name.unwrap().value() != "ExtismHost" {
         panic!("Expected `extern \"ExtismHost\"` block");
@@ -209,6 +215,7 @@ pub fn host_fn(
             let link_name = link_name.as_str();
 
             let impl_block = quote! {
+                #[link(wasm_import_module = #namespace)]
                 extern "C" {
                     #[link_name = #link_name]
                     fn #impl_name(#(#converted_inputs),*) -> #converted_output;

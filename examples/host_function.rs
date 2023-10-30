@@ -10,7 +10,7 @@ struct Output {
     pub count: i32,
 }
 
-#[host_fn]
+#[host_fn("extism:user")]
 extern "ExtismHost" {
     fn hello_world(count: Json<Output>) -> Json<Output>;
 }

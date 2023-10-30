@@ -1,9 +1,11 @@
+#![allow(clippy::missing_safety_doc)]
+
 #[cfg(target_arch = "wasm32")]
 pub use std::arch::wasm32::v128;
 
 mod macros;
 
-pub mod bindings;
+pub mod extism;
 pub mod memory;
 mod to_memory;
 
@@ -18,7 +20,6 @@ pub mod var;
 pub mod http;
 
 pub use anyhow::Error;
-pub(crate) use bindings::*;
 pub use extism_convert::*;
 pub use extism_convert::{FromBytes, FromBytesOwned, ToBytes};
 pub use extism_pdk_derive::{host_fn, plugin_fn};
@@ -53,7 +54,7 @@ pub struct Base64(pub String);
 
 /// Get input bytes from host
 pub fn input_bytes() -> Vec<u8> {
-    unsafe { extism_load_input() }
+    unsafe { extism::load_input() }
 }
 
 /// Get input bytes from host and convert into `T`
@@ -63,7 +64,7 @@ pub fn input<T: FromBytesOwned>() -> Result<T, Error> {
 }
 
 /// Set output for host
-pub fn output<'a, T: ToMemory>(data: T) -> Result<(), Error> {
+pub fn output<T: ToMemory>(data: T) -> Result<(), Error> {
     let data = data.to_memory()?;
     data.set_output();
     Ok(())

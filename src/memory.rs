@@ -6,41 +6,41 @@ pub mod internal {
     use super::*;
 
     pub fn memory_alloc(n: u64) -> MemoryHandle {
-        let length = n as u64;
-        let offset = unsafe { extism_alloc(length) };
+        let length = n;
+        let offset = unsafe { extism::alloc(length) };
         MemoryHandle { offset, length }
     }
 
     pub fn memory_free(handle: MemoryHandle) {
-        unsafe { extism_free(handle.offset) }
+        unsafe { extism::free(handle.offset) }
     }
 
     pub fn memory_bytes(handle: MemoryHandle) -> Vec<u8> {
         let mut data = vec![0; handle.offset as usize];
-        unsafe { extism_load(handle.offset, &mut data) };
+        unsafe { extism::load(handle.offset, &mut data) };
         data
     }
 
     pub fn memory_length(offs: u64) -> u64 {
-        unsafe { extism_length(offs) }
+        unsafe { extism::length(offs) }
     }
     /// Load data from memory into a `u8` slice
     pub fn load(handle: MemoryHandle, mut buf: impl AsMut<[u8]>) {
         let buf = buf.as_mut();
         unsafe {
-            extism_load(handle.offset, &mut buf[0..handle.length as usize]);
+            extism::load(handle.offset, &mut buf[0..handle.length as usize]);
         }
     }
 
     /// Load data from `u8` slice into memory
     pub fn store(handle: MemoryHandle, buf: impl AsRef<[u8]>) {
         let buf = buf.as_ref();
-        unsafe { extism_store(handle.offset, &buf[0..handle.length as usize]) }
+        unsafe { extism::store(handle.offset, &buf[0..handle.length as usize]) }
     }
 
     /// Find `Memory` by offset
     pub fn find(offset: u64) -> Option<MemoryHandle> {
-        let length = unsafe { bindings::extism_length(offset) };
+        let length = unsafe { extism::length(offset) };
 
         if length == 0 {
             return None;
@@ -75,8 +75,8 @@ impl Memory {
         let data = x.to_bytes()?;
         let data = data.as_ref();
         let length = data.len() as u64;
-        let offset = unsafe { extism_alloc(length) };
-        unsafe { extism_store(offset, &data) };
+        let offset = unsafe { extism::alloc(length) };
+        unsafe { extism::store(offset, data) };
         Ok(Self(MemoryHandle { offset, length }))
     }
 
@@ -102,7 +102,7 @@ impl Memory {
     /// Store memory as function output
     pub fn set_output(self) {
         unsafe {
-            extism_output_set(self.0.offset, self.0.length);
+            extism::output_set(self.0.offset, self.0.length);
         }
     }
 
@@ -110,15 +110,15 @@ impl Memory {
     pub fn log(&self, level: LogLevel) {
         unsafe {
             match level {
-                LogLevel::Info => extism_log_info(self.0.offset),
-                LogLevel::Debug => extism_log_debug(self.0.offset),
-                LogLevel::Warn => extism_log_warn(self.0.offset),
-                LogLevel::Error => extism_log_error(self.0.offset),
+                LogLevel::Info => extism::log_info(self.0.offset),
+                LogLevel::Debug => extism::log_debug(self.0.offset),
+                LogLevel::Warn => extism::log_warn(self.0.offset),
+                LogLevel::Error => extism::log_error(self.0.offset),
             }
         }
     }
 
-    pub fn to<'a, T: FromBytesOwned>(&self) -> Result<T, Error> {
+    pub fn to<T: FromBytesOwned>(&self) -> Result<T, Error> {
         T::from_bytes_owned(&self.to_vec())
     }
 

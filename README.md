@@ -242,6 +242,12 @@ extern "ExtismHost" {
 }
 ```
 
+To declare a host function in a specific namespace, pass the module name to the `host_fn` macro:
+
+```rust
+#[host_fn("extism:host/user")]
+```
+
 > **Note**: The types we accept here are the same as the exports as the interface also uses the [convert crate](https://docs.rs/extism-convert/latest/extism_convert/).
 
 To call this function, we must use the `unsafe` keyword. Also note that it automatically wraps the

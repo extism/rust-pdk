@@ -123,29 +123,6 @@ pub fn host_fn(
 
     let mut gen = quote!();
 
-    let is_native_wasm_type = |x: &syn::TypePath| {
-        if let Some(x) = x.path.get_ident() {
-            return x == "i64"
-                || x == "u64"
-                || x == "i32"
-                || x == "u32"
-                || x == "f32"
-                || x == "f64"
-                || x == "v128";
-        }
-
-        let seg = x
-            .path
-            .segments
-            .iter()
-            .map(|x| x.ident.to_string())
-            .collect::<Vec<_>>();
-
-        seg == ["std", "arch", "wasm32", "v128"]
-            || seg == ["core", "arch", "wasm32", "v128"]
-            || seg == ["extism_pdk", "v128"]
-    };
-
     for function in functions {
         if let syn::ForeignItem::Fn(function) = function {
             let name = &function.sig.ident;
@@ -159,49 +136,19 @@ pub fn host_fn(
 
             let (output_is_ptr, converted_output) = match output {
                 syn::ReturnType::Default => (false, quote!(())),
-                syn::ReturnType::Type(_, ty) => match &**ty {
-                    syn::Type::Path(p) => {
-                        if is_native_wasm_type(p) {
-                            (false, quote!(#ty))
-                        } else {
-                            (true, quote!(u64))
-                        }
-                    }
-                    _ => (true, quote!(u64)),
-                },
+                syn::ReturnType::Type(_, _) => (true, quote!(u64)),
             };
 
             for input in &original_inputs {
-                let mut is_ptr = false;
                 match input {
                     syn::FnArg::Typed(t) => {
-                        match &*t.ty {
-                            syn::Type::Path(p) => {
-                                if is_native_wasm_type(p) {
-                                    converted_inputs.push(input.clone());
-                                } else {
-                                    let mut input = t.clone();
-                                    input.ty = Box::new(syn::Type::Verbatim(quote!(u64)));
-                                    converted_inputs.push(syn::FnArg::Typed(input));
-                                    is_ptr = true;
-                                }
-                            }
-                            _ => {
-                                let mut input = t.clone();
-                                input.ty = Box::new(syn::Type::Verbatim(quote!(u64)));
-                                converted_inputs.push(syn::FnArg::Typed(input));
-                                is_ptr = true;
-                            }
-                        }
+                        let mut input = t.clone();
+                        input.ty = Box::new(syn::Type::Verbatim(quote!(u64)));
+                        converted_inputs.push(syn::FnArg::Typed(input));
                         match &*t.pat {
                             syn::Pat::Ident(i) => {
-                                if is_ptr {
-                                    into_inputs.push(
-                                        quote!(extism_pdk::ToMemory::to_memory(&&#i)?.offset()),
-                                    );
-                                } else {
-                                    into_inputs.push(quote!(#i));
-                                }
+                                into_inputs
+                                    .push(quote!(extism_pdk::ToMemory::to_memory(&&#i)?.offset()));
                             }
                             _ => panic!("invalid host function argument"),
                         }

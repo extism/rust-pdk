@@ -15,7 +15,7 @@ cargo new --lib my-plugin
 Add the library from [crates.io](https://crates.io/crates/extism-pdk).
 
 ```bash
-cargo add extism-pdk@1.0.0-beta.0
+cargo add extism-pdk@1.0.0-rc1
 ```
 
 Change your `Cargo.toml` to set the crate-type to `cdylib` (this instructs the compiler to produce a dynamic library, which for our target will be a Wasm binary):

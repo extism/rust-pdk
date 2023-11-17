@@ -31,22 +31,24 @@ extern "C" {
 /// * `offs` - The Extism offset pointer location to the memory
 /// * `data` - The pointer to byte slice result
 pub unsafe fn load(offs: u64, data: &mut [u8]) {
-    let ptr = data.as_mut_ptr();
-
-    let mut index = 0;
-    let mut left;
     let len = data.len();
-    while index < len {
-        left = len - index;
-        if left < 8 {
-            data[index] = load_u8(offs + index as u64);
-            index += 1;
-            continue;
-        }
+    // x >> 3 == x / 8
+    let chunk_count = len >> 3;
 
-        let x = load_u64(offs + index as u64);
-        (ptr as *mut u64).add(index / 8).write(x);
-        index += 8;
+    let mut_ptr = data.as_mut_ptr() as *mut u64;
+    for chunk_idx in 0..chunk_count {
+        let x = load_u64(offs + (chunk_idx<<3) as u64);
+        mut_ptr.add(chunk_idx).write(x);
+    }
+
+    // x % 8 == x & 7
+    let remainder = len & 7;
+    let remainder_offset = chunk_count << 3;
+    // Allow the needless range loop because clippy wants to turn this into
+    // iter_mut().enumerate().skip().take(), which is less readable IMO!
+    #[allow(clippy::needless_range_loop)]
+    for index in remainder_offset..(remainder + remainder_offset) {
+        data[index] = load_u8(offs + index as u64);
     }
 }
 
@@ -54,23 +56,21 @@ pub unsafe fn load(offs: u64, data: &mut [u8]) {
 /// Consider using the plugin_fn macro to automatically
 /// handle inputs as function parameters.
 pub unsafe fn load_input() -> Vec<u8> {
-    let input_length = input_length();
-    let mut data = vec![0; input_length as usize];
+    let len = input_length() as usize;
+    let mut data = vec![0; len];
+    let chunk_count = len >> 3;
 
-    let mut index = 0;
-    let mut left;
-    let len = data.len();
-    while index < len {
-        left = len - index;
-        if left < 8 {
-            data[index] = input_load_u8(index as u64);
-            index += 1;
-            continue;
-        }
+    let mut_ptr = data.as_mut_ptr() as *mut u64;
+    for chunk_idx in 0..chunk_count {
+        let x = input_load_u64((chunk_idx << 3) as u64);
+        mut_ptr.add(chunk_idx).write(x);
+    }
 
-        let x = input_load_u64(index as u64);
-        (data.as_mut_ptr() as *mut u64).add(index / 8).write(x);
-        index += 8;
+    let remainder = len & 7;
+    let remainder_offset = chunk_count << 3;
+    #[allow(clippy::needless_range_loop)]
+    for index in remainder_offset..(remainder + remainder_offset) {
+        data[index] = input_load_u8(index as u64);
     }
 
     data
@@ -84,23 +84,21 @@ pub unsafe fn load_input() -> Vec<u8> {
 /// * `offs` - The Extism offset pointer location to store the memory
 /// * `data` - The byte array to store at that offset
 pub unsafe fn store(offs: u64, data: &[u8]) {
-    let ptr = data.as_ptr();
-
-    let mut index = 0;
-    let mut left;
     let len = data.len();
-    while index < len {
-        left = len - index;
-        if left < 8 {
-            store_u8(offs + index as u64, data[index]);
-            index += 1;
-            continue;
-        }
+    let chunk_count = len >> 3;
 
+    let ptr = data.as_ptr() as *const u64;
+    for chunk_idx in 0..chunk_count {
         store_u64(
-            offs + index as u64,
-            (ptr as *const u64).add(index / 8).read(),
+            offs + (chunk_idx << 3) as u64,
+            ptr.add(chunk_idx).read(),
         );
-        index += 8;
+    }
+
+    let remainder = len & 7;
+    let remainder_offset = chunk_count << 3;
+    #[allow(clippy::needless_range_loop)]
+    for index in remainder_offset..(remainder + remainder_offset) {
+        store_u8(offs + index as u64, data[index]);
     }
 }

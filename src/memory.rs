@@ -118,12 +118,19 @@ impl Memory {
         }
     }
 
+    /// Convert to a Rust value
     pub fn to<T: FromBytesOwned>(&self) -> Result<T, Error> {
         T::from_bytes_owned(&self.to_vec())
     }
 
+    /// Locate a memory block by offset
     pub fn find(offs: u64) -> Option<Memory> {
         internal::find(offs).map(Memory)
+    }
+
+    /// Free a memory block, allowing for it to be re-used
+    pub fn free(self) {
+        internal::memory_free(self.0)
     }
 }
 

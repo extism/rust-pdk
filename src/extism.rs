@@ -4,6 +4,7 @@ extern "C" {
     pub fn input_load_u8(offs: u64) -> u8;
     pub fn input_load_u64(offs: u64) -> u64;
     pub fn length(offs: u64) -> u64;
+    pub fn length_unsafe(offs: u64) -> u64;
     pub fn alloc(length: u64) -> u64;
     pub fn free(offs: u64);
     pub fn output_set(offs: u64, length: u64);
@@ -37,7 +38,7 @@ pub unsafe fn load(offs: u64, data: &mut [u8]) {
 
     let mut_ptr = data.as_mut_ptr() as *mut u64;
     for chunk_idx in 0..chunk_count {
-        let x = load_u64(offs + (chunk_idx<<3) as u64);
+        let x = load_u64(offs + (chunk_idx << 3) as u64);
         mut_ptr.add(chunk_idx).write(x);
     }
 
@@ -89,10 +90,7 @@ pub unsafe fn store(offs: u64, data: &[u8]) {
 
     let ptr = data.as_ptr() as *const u64;
     for chunk_idx in 0..chunk_count {
-        store_u64(
-            offs + (chunk_idx << 3) as u64,
-            ptr.add(chunk_idx).read(),
-        );
+        store_u64(offs + (chunk_idx << 3) as u64, ptr.add(chunk_idx).read());
     }
 
     let remainder = len & 7;

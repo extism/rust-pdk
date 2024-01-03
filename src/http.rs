@@ -45,7 +45,7 @@ pub fn request<T: ToMemory>(
     let data = body.as_ref().map(|x| x.offset()).unwrap_or(0);
     let offs = unsafe { extism::http_request(req.offset(), data) };
     let status = unsafe { extism::http_status_code() };
-    let len = unsafe { extism::length(offs) };
+    let len = unsafe { extism::length_unsafe(offs) };
     Ok(HttpResponse {
         memory: Memory(MemoryHandle {
             offset: offs,

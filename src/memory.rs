@@ -21,9 +21,16 @@ pub mod internal {
         data
     }
 
+    /// Get the length of the memory handle stored at the given offset, this will return 0 if called on a non-handle pointer
     pub fn memory_length(offs: u64) -> u64 {
         unsafe { extism::length(offs) }
     }
+
+    /// Get the length of the memory handle stored at the given offset, this may return garbage if called on a non-handle pointer
+    pub fn memory_length_unsafe(offs: u64) -> u64 {
+        unsafe { extism::length_unsafe(offs) }
+    }
+
     /// Load data from memory into a `u8` slice
     pub fn load(handle: MemoryHandle, mut buf: impl AsMut<[u8]>) {
         let buf = buf.as_mut();

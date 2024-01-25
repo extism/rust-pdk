@@ -1,6 +1,6 @@
 [package]
 name = "extism-pdk"
-version = "1.0.0"
+version = "1.0.1"
 edition = "2021"
 authors = ["The Extism Authors", "oss@extism.org"]
 license = "BSD-3-Clause"
@@ -12,15 +12,16 @@ description = "Extism Plug-in Development Kit (PDK) for Rust"
 anyhow = "1"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-extism-pdk-derive = {path = "./derive", version = "1.0.0"}
-extism-manifest = {version = "1.0.0", optional = true}
-extism-convert = { version = "1.0"}
+extism-pdk-derive = { path = "./derive", version = "1.0.0" }
+extism-manifest = { version = "1.0.0", optional = true }
+extism-convert = { version = "1.0.3" }
 base64 = "0.21.0"
 
 [features]
 default = ["http", "msgpack"]
 http = ["extism-manifest"]
 msgpack = ["extism-convert/msgpack"]
+protobuf = ["extism-convert/protobuf"]
 
 [workspace]
 members = [

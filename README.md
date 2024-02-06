@@ -215,9 +215,9 @@ Sometimes it is useful to let a plug-in make HTTP calls.
 
 ```rust
 #[plugin_fn]
-pub fn http_get(Json(req): Json<HttpRequest>) -> FnResult<HttpResponse> {
+pub fn http_get(Json(req): Json<HttpRequest>) -> FnResult<Vec<u8>> {
     let res = http::request::<()>(&req, None)?;
-    Ok(res)
+    Ok(res.body())
 }
 ```
 

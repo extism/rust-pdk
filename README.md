@@ -25,6 +25,21 @@ Change your `Cargo.toml` to set the crate-type to `cdylib` (this instructs the c
 crate_type = ["cdylib"]
 ```
 
+### Rustup and wasm32-unknown-unknown installation
+
+Our example below will use of the wasm32-unknown-unknown target. If this is not installed you will need to do so before this example will build. The easiest way to do this is use *rustup*. If you have *rustup* installed skip the next step.
+
+```toml
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+```
+
+Once *rustup* is installed, add the wasm32-unknown-unknown target:
+
+```toml
+rustup target add wasm32-unknown-unknown
+```
+
+
 ## Getting Started
 
 The goal of writing an [Extism plug-in](https://extism.org/docs/concepts/plug-in) is to compile your Rust code to a Wasm module with exported functions that the host application can invoke. The first thing you should understand is creating an export. Let's write a simple program that exports a `greet` function which will take a name as a string and return a greeting string. For this, we use the `#[plugin_fn]` macro on our exported function:

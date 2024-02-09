@@ -35,7 +35,7 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
 Once *rustup* is installed, add the wasm32-unknown-unknown target:
 
-```toml
+```bash
 rustup target add wasm32-unknown-unknown
 ```
 

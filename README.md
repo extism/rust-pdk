@@ -29,7 +29,7 @@ crate_type = ["cdylib"]
 
 Our example below will use of the wasm32-unknown-unknown target. If this is not installed you will need to do so before this example will build. The easiest way to do this is use *rustup*. If you have *rustup* installed skip the next step.
 
-```toml
+```bash
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ```
 

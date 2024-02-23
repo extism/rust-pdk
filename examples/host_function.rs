@@ -5,18 +5,19 @@ use serde::{Deserialize, Serialize};
 
 const VOWELS: &[char] = &['a', 'A', 'e', 'E', 'i', 'I', 'o', 'O', 'u', 'U'];
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, ToBytes, FromBytes)]
+#[encoding(Json)]
 struct Output {
     pub count: i32,
 }
 
 #[host_fn("extism:env/user")]
 extern "ExtismHost" {
-    fn hello_world(count: Json<Output>) -> Json<Output>;
+    fn hello_world(count: Output) -> Output;
 }
 
 #[plugin_fn]
-pub unsafe fn count_vowels<'a>(input: String) -> FnResult<Json<Output>> {
+pub unsafe fn count_vowels<'a>(input: String) -> FnResult<Output> {
     let mut count = 0;
     for ch in input.chars() {
         if VOWELS.contains(&ch) {
@@ -25,6 +26,6 @@ pub unsafe fn count_vowels<'a>(input: String) -> FnResult<Json<Output>> {
     }
 
     let output = Output { count };
-    let output = unsafe { hello_world(Json(output))? };
+    let output = unsafe { hello_world(output)? };
     Ok(output)
 }

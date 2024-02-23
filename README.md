@@ -125,6 +125,29 @@ pub fn add(Json(add): Json<Add>) -> FnResult<Json<Sum>> {
 }
 ```
 
+The same thing can be accomplished using the `extism-convert` derive macros:
+
+```rust
+#[derive(serde::Deserialize, FromBytes)]
+#[encoding(Json)]
+struct Add {
+    a: u32,
+    b: u32,
+}
+
+#[derive(serde::Serialize, ToBytes)]
+#[encoding(Json)]
+struct Sum {
+    sum: u32,
+}
+
+#[plugin_fn]
+pub fn add(add: Add) -> FnResult<Sum> {
+    let sum = Sum { sum: add.a + add.b };
+    Ok(sum)
+}
+```
+
 ### Raw Export Interface
 
 [plugin_fn](https://docs.rs/extism-pdk/latest/extism_pdk/attr.plugin_fn.html) is a nice macro abstraction but there may be times where you want more control. You can code directly to the raw ABI interface of export functions.

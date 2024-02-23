@@ -1,11 +1,11 @@
 #![no_main]
 
 use extism_pdk::*;
-use serde::Serialize;
 
 const VOWELS: &[char] = &['a', 'A', 'e', 'E', 'i', 'I', 'o', 'O', 'u', 'U'];
 
-#[derive(Serialize)]
+#[derive(serde::Serialize, ToBytes)]
+#[encoding(Json)]
 struct TestOutput {
     pub count: i32,
     // pub config: String,
@@ -14,7 +14,7 @@ struct TestOutput {
 }
 
 #[plugin_fn]
-pub unsafe fn count_vowels<'a>(input: String) -> FnResult<Json<TestOutput>> {
+pub unsafe fn count_vowels<'a>(input: String) -> FnResult<TestOutput> {
     let mut count = 0;
     for ch in input.chars() {
         if VOWELS.contains(&ch) {
@@ -35,5 +35,5 @@ pub unsafe fn count_vowels<'a>(input: String) -> FnResult<Json<TestOutput>> {
         // a,
         // b,
     };
-    Ok(Json(output))
+    Ok(output)
 }

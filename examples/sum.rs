@@ -2,19 +2,21 @@
 
 use extism_pdk::*;
 
-#[derive(serde::Deserialize)]
+#[derive(serde::Deserialize, FromBytes)]
+#[encoding(Json)]
 struct Add {
     a: u32,
     b: u32,
 }
 
-#[derive(serde::Serialize)]
+#[derive(serde::Serialize, ToBytes)]
+#[encoding(Json)]
 struct Sum {
     sum: u32,
 }
 
 #[plugin_fn]
-pub fn add(Json(add): Json<Add>) -> FnResult<Json<Sum>> {
+pub fn add(add: Add) -> FnResult<Sum> {
     let sum = Sum { sum: add.a + add.b };
-    Ok(Json(sum))
+    Ok(sum)
 }

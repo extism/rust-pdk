@@ -1,6 +1,6 @@
 use proc_macro2::{Ident, Span};
 use quote::quote;
-use syn::{parse_macro_input, ItemFn, ItemForeignMod};
+use syn::{parse_macro_input, FnArg, ItemFn, ItemForeignMod};
 
 /// `plugin_fn` is used to define an Extism callable function to export
 ///
@@ -133,10 +133,16 @@ pub fn export_fn(
     let (raw_inputs, raw_args): (Vec<_>, Vec<_>) = inputs
         .iter()
         .enumerate()
-        .map(|(i, _)| {
+        .map(|(i, x)| {
+            let t = match x {
+                FnArg::Receiver(_) => {
+                    panic!("Receiver argument (self) cannot be used in extism_pdk::export_fn")
+                }
+                FnArg::Typed(t) => &t.ty,
+            };
             let arg = Ident::new(&format!("arg{i}"), Span::call_site());
             (
-                quote! { #arg: extism_pdk::memory::Pointer },
+                quote! { #arg: extism_pdk::memory::Pointer<#t> },
                 quote! { #arg.get()? },
             )
         })
@@ -159,7 +165,7 @@ pub fn export_fn(
                 } else {
                     panic!("extism_pdk::export_fn expects a function that returns extism_pdk::ExportResult");
                 }
-            }
+            };
             (false, quote! {-> u64 })
         }
     };

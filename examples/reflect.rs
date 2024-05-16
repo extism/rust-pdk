@@ -6,3 +6,8 @@ use extism_pdk::*;
 pub fn reflect(input: String) -> ExportResult<Vec<u8>> {
     Ok(input.to_lowercase().into_bytes())
 }
+
+#[export_fn]
+pub fn nothing() -> ExportResult<()> {
+    Ok(())
+}

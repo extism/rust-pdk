@@ -174,3 +174,16 @@ impl From<i64> for Memory {
         Memory::find(offset as u64).unwrap_or_else(Memory::null)
     }
 }
+
+#[repr(transparent)]
+pub struct Pointer(u64);
+
+impl Pointer {
+    pub fn get<T: FromBytesOwned>(&self) -> Result<T, Error> {
+        let mem = Memory::find(self.0);
+        match mem {
+            Some(mem) => T::from_bytes_owned(&mem.to_vec()),
+            None => anyhow::bail!("Invalid pointer offset {}", self.0),
+        }
+    }
+}

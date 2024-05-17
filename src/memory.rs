@@ -176,15 +176,15 @@ impl From<i64> for Memory {
 }
 
 #[repr(transparent)]
-pub struct Pointer<T>(u64, std::marker::PhantomData<T>);
+pub struct MemoryPointer<T>(u64, std::marker::PhantomData<T>);
 
-impl<T> Pointer<T> {
+impl<T> MemoryPointer<T> {
     pub unsafe fn new(x: u64) -> Self {
-        Pointer(x, Default::default())
+        MemoryPointer(x, Default::default())
     }
 }
 
-impl<T: FromBytesOwned> Pointer<T> {
+impl<T: FromBytesOwned> MemoryPointer<T> {
     pub fn get(&self) -> Result<T, Error> {
         let mem = Memory::find(self.0);
         match mem {

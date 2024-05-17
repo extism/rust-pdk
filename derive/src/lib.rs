@@ -142,7 +142,7 @@ pub fn export_fn(
             };
             let arg = Ident::new(&format!("arg{i}"), Span::call_site());
             (
-                quote! { #arg: extism_pdk::memory::Pointer<#t> },
+                quote! { #arg: extism_pdk::MemoryPointer<#t> },
                 quote! { #arg.get()? },
             )
         })

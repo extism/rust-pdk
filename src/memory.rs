@@ -176,6 +176,7 @@ impl From<i64> for Memory {
 }
 
 #[repr(transparent)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub struct MemoryPointer<T>(u64, std::marker::PhantomData<T>);
 
 impl<T> MemoryPointer<T> {

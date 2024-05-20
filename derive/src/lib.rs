@@ -104,7 +104,7 @@ pub fn plugin_fn(
     }
 }
 
-/// `export_fn` is used to define a function that will be exported by a plugin, but is not directly
+/// `shared_fn` is used to define a function that will be exported by a plugin but is not directly
 /// callable by an Extism runtime. These functions can be used for runtime linking and mocking host
 /// functions for tests. If direct access to Wasm native parameters is needed, then a bare
 /// `extern "C" fn` should be used instead.
@@ -112,14 +112,14 @@ pub fn plugin_fn(
 /// All arguments should implement `extism_pdk::ToBytes` and the return value should implement
 /// `extism_pdk::FromBytes`
 #[proc_macro_attribute]
-pub fn export_fn(
+pub fn shared_fn(
     _attr: proc_macro::TokenStream,
     item: proc_macro::TokenStream,
 ) -> proc_macro::TokenStream {
     let mut function = parse_macro_input!(item as ItemFn);
 
     if !matches!(function.vis, syn::Visibility::Public(..)) {
-        panic!("extism_pdk::export_fn expects a public function");
+        panic!("extism_pdk::shared_fn expects a public function");
     }
 
     let name = &function.sig.ident;
@@ -136,7 +136,7 @@ pub fn export_fn(
         .map(|(i, x)| {
             let t = match x {
                 FnArg::Receiver(_) => {
-                    panic!("Receiver argument (self) cannot be used in extism_pdk::export_fn")
+                    panic!("Receiver argument (self) cannot be used in extism_pdk::shared_fn")
                 }
                 FnArg::Typed(t) => &t.ty,
             };
@@ -150,7 +150,7 @@ pub fn export_fn(
 
     if name == "main" {
         panic!(
-            "export_pdk::export_fn must not be applied to a `main` function. To fix, rename this to something other than `main`."
+            "export_pdk::shared_fn must not be applied to a `main` function. To fix, rename this to something other than `main`."
         )
     }
 
@@ -159,11 +159,11 @@ pub fn export_fn(
         syn::ReturnType::Type(_, t) => {
             if let syn::Type::Path(p) = t.as_ref() {
                 if let Some(t) = p.path.segments.last() {
-                    if t.ident != "ExportResult" {
-                        panic!("extism_pdk::export_fn expects a function that returns extism_pdk::ExportResult");
+                    if t.ident != "SharedFnResult" {
+                        panic!("extism_pdk::shared_fn expects a function that returns extism_pdk::SharedFnResult");
                     }
                 } else {
-                    panic!("extism_pdk::export_fn expects a function that returns extism_pdk::ExportResult");
+                    panic!("extism_pdk::shared_fn expects a function that returns extism_pdk::SharedFnResult");
                 }
             };
             (false, quote! {-> u64 })
@@ -174,7 +174,7 @@ pub fn export_fn(
         quote! {
             #[no_mangle]
             pub #constness #unsafety extern "C" fn #name(#(#raw_inputs,)*) {
-                #constness #unsafety fn inner #generics(#inputs) -> extism_pdk::ExportResult<()> {
+                #constness #unsafety fn inner #generics(#inputs) -> extism_pdk::SharedFnResult<()> {
                     #block
                 }
 

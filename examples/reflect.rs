@@ -2,12 +2,12 @@
 
 use extism_pdk::*;
 
-#[export_fn]
-pub fn host_reflect(input: String) -> ExportResult<Vec<u8>> {
+#[shared_fn]
+pub fn host_reflect(input: String) -> SharedFnResult<Vec<u8>> {
     Ok(input.to_lowercase().into_bytes())
 }
 
-#[export_fn]
-pub fn nothing() -> ExportResult<()> {
+#[shared_fn]
+pub fn nothing() -> SharedFnResult<()> {
     Ok(())
 }

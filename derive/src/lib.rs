@@ -7,7 +7,19 @@ use syn::{parse_macro_input, FnArg, ItemFn, ItemForeignMod};
 /// It should be added to a function you would like to export, the function should
 /// accept a parameter that implements `extism_pdk::FromBytes` and return a
 /// `extism_pdk::FnResult` that contains a value that implements
-/// `extism_pdk::ToBytes`.
+/// `extism_pdk::ToBytes`. This maps input and output parameters to Extism input
+/// and output instead of using function arguments directly.
+///
+/// ## Example
+///
+/// ```rust
+/// use extism_pdk::{FnResult, plugin_fn};
+/// #[plugin_fn]
+/// pub fn greet(name: String) -> FnResult<String> {
+///   let s = format!("Hello, {name}");
+///   Ok(s)
+/// }
+/// ```
 #[proc_macro_attribute]
 pub fn plugin_fn(
     _attr: proc_macro::TokenStream,
@@ -111,6 +123,16 @@ pub fn plugin_fn(
 ///
 /// All arguments should implement `extism_pdk::ToBytes` and the return value should implement
 /// `extism_pdk::FromBytes`
+/// ## Example
+///
+/// ```rust
+/// use extism_pdk::{FnResult, shared_fn};
+/// #[shared_fn]
+/// pub fn greet2(greeting: String, name: String) -> FnResult<String> {
+///   let s = format!("{greeting}, {name}");
+///   Ok(name)
+/// }
+/// ```
 #[proc_macro_attribute]
 pub fn shared_fn(
     _attr: proc_macro::TokenStream,

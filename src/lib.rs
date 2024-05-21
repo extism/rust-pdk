@@ -22,8 +22,8 @@ pub mod http;
 pub use anyhow::Error;
 pub use extism_convert::*;
 pub use extism_convert::{FromBytes, FromBytesOwned, ToBytes};
-pub use extism_pdk_derive::{host_fn, plugin_fn};
-pub use memory::Memory;
+pub use extism_pdk_derive::{host_fn, plugin_fn, shared_fn};
+pub use memory::{Memory, MemoryPointer};
 pub use to_memory::ToMemory;
 
 #[cfg(feature = "http")]
@@ -36,6 +36,9 @@ pub use http::HttpResponse;
 
 /// The return type of a plugin function
 pub type FnResult<T> = Result<T, WithReturnCode<Error>>;
+
+/// The return type of a `shared_fn`
+pub type SharedFnResult<T> = Result<T, Error>;
 
 /// Logging levels
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

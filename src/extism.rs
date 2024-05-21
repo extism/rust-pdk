@@ -25,7 +25,7 @@ extern "C" {
 }
 
 /// Loads a byte array from Extism's memory. Only use this if you
-/// have already considered the plugin_fn macro as well as the [extism_load_input] function.
+/// have already considered the plugin_fn macro as well as the `extism_load_input` function.
 ///
 /// # Arguments
 ///

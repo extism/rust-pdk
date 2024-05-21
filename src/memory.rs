@@ -174,3 +174,23 @@ impl From<i64> for Memory {
         Memory::find(offset as u64).unwrap_or_else(Memory::null)
     }
 }
+
+#[repr(transparent)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub struct MemoryPointer<T>(u64, std::marker::PhantomData<T>);
+
+impl<T> MemoryPointer<T> {
+    pub unsafe fn new(x: u64) -> Self {
+        MemoryPointer(x, Default::default())
+    }
+}
+
+impl<T: FromBytesOwned> MemoryPointer<T> {
+    pub fn get(&self) -> Result<T, Error> {
+        let mem = Memory::find(self.0);
+        match mem {
+            Some(mem) => T::from_bytes_owned(&mem.to_vec()),
+            None => anyhow::bail!("Invalid pointer offset {}", self.0),
+        }
+    }
+}

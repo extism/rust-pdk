@@ -32,7 +32,11 @@ pub fn get_memory(key: impl AsRef<str>) -> Result<Option<Memory>, Error> {
 /// let my_var = var::get("my_var")?.unwrap_or(0u32);
 /// ```
 pub fn get<T: FromBytesOwned>(key: impl AsRef<str>) -> Result<Option<T>, Error> {
-    match get_memory(key)?.map(|x| x.to_vec()) {
+    match get_memory(key)?.map(|x| {
+        let res = x.to_vec();
+        x.free();
+        res
+    }) {
         Some(v) => Ok(Some(T::from_bytes(&v)?)),
         None => Ok(None),
     }
@@ -56,6 +60,8 @@ pub fn set(key: impl AsRef<str>, val: impl ToMemory) -> Result<(), Error> {
     let val = val.to_memory()?;
     let key = Memory::from_bytes(key.as_ref().as_bytes())?;
     unsafe { extism::var_set(key.offset(), val.offset()) }
+    key.free();
+    val.free();
     Ok(())
 }
 
@@ -74,5 +80,6 @@ pub fn set(key: impl AsRef<str>, val: impl ToMemory) -> Result<(), Error> {
 pub fn remove(key: impl AsRef<str>) -> Result<(), Error> {
     let key = Memory::from_bytes(key.as_ref().as_bytes())?;
     unsafe { extism::var_set(key.offset(), 0) };
+    key.free();
     Ok(())
 }

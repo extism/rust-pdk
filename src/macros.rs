@@ -3,7 +3,8 @@ macro_rules! log {
     ($lvl:expr, $($arg:tt)+) => {{
         let fmt = format!($($arg)+);
         let memory = $crate::Memory::from_bytes(&fmt).unwrap();
-        memory.log($lvl)
+        memory.log($lvl);
+        memory.free()
     }}
 }
 

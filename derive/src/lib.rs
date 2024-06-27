@@ -122,13 +122,13 @@ pub fn plugin_fn(
 /// `extern "C" fn` should be used instead.
 ///
 /// All arguments should implement `extism_pdk::ToBytes` and the return value should implement
-/// `extism_pdk::FromBytes`
+/// `extism_pdk::FromBytes`, if `()` or `SharedFnResult<()>` then no value will be returned.
 /// ## Example
 ///
 /// ```rust
-/// use extism_pdk::{FnResult, shared_fn};
+/// use extism_pdk::{SharedFnResult, shared_fn};
 /// #[shared_fn]
-/// pub fn greet2(greeting: String, name: String) -> FnResult<String> {
+/// pub fn greet2(greeting: String, name: String) -> SharedFnResult<String> {
 ///   let s = format!("{greeting}, {name}");
 ///   Ok(name)
 /// }

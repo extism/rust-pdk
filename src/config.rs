@@ -34,5 +34,9 @@ pub fn get_memory(key: impl AsRef<str>) -> Result<Option<Memory>, Error> {
 /// let my_config = config::get("my_config")?.unwrap_or(0u32);
 /// ```
 pub fn get(key: impl AsRef<str>) -> Result<Option<String>, Error> {
-    Ok(get_memory(key)?.map(|x| x.to_string().expect("Config value is not a valid string")))
+    Ok(get_memory(key)?.map(|x| {
+        let s = x.to_string().expect("Config value is not a valid string");
+        x.free();
+        s
+    }))
 }

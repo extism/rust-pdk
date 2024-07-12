@@ -1,22 +1,5 @@
 use crate::*;
 
-pub fn get_memory(key: impl AsRef<str>) -> Result<Option<Memory>, Error> {
-    let mem = Memory::from_bytes(key.as_ref().as_bytes())?;
-
-    let offset = unsafe { extism::var_get(mem.offset()) };
-    if offset == 0 {
-        return Ok(None);
-    }
-    let length = unsafe { extism::length(offset) };
-
-    if length == 0 {
-        return Ok(None);
-    }
-
-    let memory = MemoryHandle { offset, length };
-    Ok(Some(Memory(memory)))
-}
-
 /// Gets a variable in the plug-in. This variable lives as long as the
 /// plug-in is loaded.
 ///
@@ -32,19 +15,29 @@ pub fn get_memory(key: impl AsRef<str>) -> Result<Option<Memory>, Error> {
 /// let my_var = var::get("my_var")?.unwrap_or(0u32);
 /// ```
 pub fn get<T: FromBytesOwned>(key: impl AsRef<str>) -> Result<Option<T>, Error> {
-    match get_memory(key)?.map(|x| x.to_vec()) {
-        Some(v) => Ok(Some(T::from_bytes(&v)?)),
-        None => Ok(None),
+    let key = key.as_ref();
+    let n = unsafe { extism::var_length(read_handle(key)) };
+    if n < 0 {
+        return Ok(None);
     }
+
+    let mut buf = vec![0; n as usize];
+    unsafe {
+        extism::var_read(read_handle(key), write_handle(&mut buf));
+    }
+
+    let x = T::from_bytes_owned(&buf)?;
+
+    Ok(Some(x))
 }
 
 /// Set a variable in the plug-in. This variable lives as long as the
-/// plug-in is loaded. The value must have a [ToMemory] implementation.
+/// plug-in is loaded.
 ///
 /// # Arguments
 ///
 /// * `key` - A unique string key to identify the variable
-/// * `val` - The value to set. Must have a [ToMemory] implementation
+/// * `val` - The value to set.
 ///
 /// # Examples
 ///
@@ -52,10 +45,11 @@ pub fn get<T: FromBytesOwned>(key: impl AsRef<str>) -> Result<Option<T>, Error> 
 /// var::set("my_u32_var", 42u32)?;
 /// var::set("my_str_var", "Hello, World!")?;
 /// ```
-pub fn set(key: impl AsRef<str>, val: impl ToMemory) -> Result<(), Error> {
-    let val = val.to_memory()?;
-    let key = Memory::from_bytes(key.as_ref().as_bytes())?;
-    unsafe { extism::var_set(key.offset(), val.offset()) }
+pub fn set<'a>(key: impl AsRef<str>, val: impl ToBytes<'a>) -> Result<(), Error> {
+    let val = val.to_bytes()?;
+    unsafe {
+        extism::var_write(read_handle(key.as_ref()), read_handle(val));
+    }
     Ok(())
 }
 
@@ -72,7 +66,8 @@ pub fn set(key: impl AsRef<str>, val: impl ToMemory) -> Result<(), Error> {
 /// var::remove("my_var")?;
 /// ```
 pub fn remove(key: impl AsRef<str>) -> Result<(), Error> {
-    let key = Memory::from_bytes(key.as_ref().as_bytes())?;
-    unsafe { extism::var_set(key.offset(), 0) };
+    unsafe {
+        extism::var_write(read_handle(key.as_ref()), 0);
+    }
     Ok(())
 }

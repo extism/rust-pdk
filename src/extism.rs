@@ -7,6 +7,9 @@ extern "C" {
     pub fn error(handle: Handle) -> !;
     pub fn config_length(key: Handle) -> i64;
     pub fn config_read(key: Handle, value: Handle) -> i64;
+    pub fn var_length(key: Handle) -> i64;
+    pub fn var_read(key: Handle, value: Handle) -> i64;
+    pub fn var_write(key: Handle, value: Handle);
     pub fn log(level: i32, value: Handle);
     // pub fn var_get(offs: u64) -> u64;
     // pub fn var_set(offs: u64, offs1: u64);

@@ -12,6 +12,7 @@ struct TestOutput {
     // pub a: String,
     // pub b: &'a str,
 }
+
 #[plugin_fn]
 pub fn count_vowels<'a>(input: String) -> FnResult<TestOutput> {
     let mut count = 0;

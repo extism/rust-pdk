@@ -1,24 +1,5 @@
 use crate::*;
 
-pub fn get_memory(key: impl AsRef<str>) -> Result<Option<Memory>, Error> {
-    let mem = Memory::from_bytes(key.as_ref().as_bytes())?;
-
-    let offset = unsafe { extism::config_get(mem.offset()) };
-    if offset == 0 {
-        return Ok(None);
-    }
-
-    let len = unsafe { extism::length(offset) };
-    if len == 0 {
-        return Ok(None);
-    }
-
-    Ok(Some(Memory(MemoryHandle {
-        offset,
-        length: len,
-    })))
-}
-
 /// Gets a config item passed in from the host. This item is read-only
 /// and static throughout the lifetime of the plug-in.
 ///
@@ -34,5 +15,15 @@ pub fn get_memory(key: impl AsRef<str>) -> Result<Option<Memory>, Error> {
 /// let my_config = config::get("my_config")?.unwrap_or(0u32);
 /// ```
 pub fn get(key: impl AsRef<str>) -> Result<Option<String>, Error> {
-    Ok(get_memory(key)?.map(|x| x.to_string().expect("Config value is not a valid string")))
+    let key = read_handle(key.as_ref().as_bytes());
+    let len = unsafe { extism::config_length(key) };
+    if len < 0 {
+        return Ok(None);
+    }
+
+    let mut value = vec![0u8; len as usize];
+    unsafe {
+        extism::config_read(key, write_handle(value.as_mut_slice()));
+    }
+    Ok(Some(String::from_utf8(value)?))
 }

@@ -67,49 +67,27 @@ pub fn plugin_fn(
     if no_args {
         quote! {
             #[no_mangle]
-            pub #constness #unsafety extern "C" fn #name() -> i32 {
+            pub #constness #unsafety extern "C" fn #name() {
                 #constness #unsafety fn inner #generics() #output {
                     #block
                 }
 
-                let output = match inner() {
-                    Ok(x) => x,
-                    Err(rc) => {
-                        let err = format!("{:?}", rc.0);
-                        let mut mem = extism_pdk::Memory::from_bytes(&err).unwrap();
-                        unsafe {
-                            extism_pdk::extism::error_set(mem.offset());
-                        }
-                        return rc.1;
-                    }
-                };
+                let output = extism_pdk::unwrap!(inner());
                 extism_pdk::unwrap!(extism_pdk::output(&output));
-                0
             }
         }
         .into()
     } else {
         quote! {
             #[no_mangle]
-            pub #constness #unsafety extern "C" fn #name() -> i32 {
+            pub #constness #unsafety extern "C" fn #name() {
                 #constness #unsafety fn inner #generics(#inputs) #output {
                     #block
                 }
 
                 let input = extism_pdk::unwrap!(extism_pdk::input());
-                let output = match inner(input) {
-                    Ok(x) => x,
-                    Err(rc) => {
-                        let err = format!("{:?}", rc.0);
-                        let mut mem = extism_pdk::Memory::from_bytes(&err).unwrap();
-                        unsafe {
-                            extism_pdk::extism::error_set(mem.offset());
-                        }
-                        return rc.1;
-                    }
-                };
+                let output = extism_pdk::unwrap!(inner(input));
                 extism_pdk::unwrap!(extism_pdk::output(&output));
-                0
             }
         }
         .into()

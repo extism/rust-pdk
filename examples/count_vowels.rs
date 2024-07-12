@@ -12,9 +12,8 @@ struct TestOutput {
     // pub a: String,
     // pub b: &'a str,
 }
-
 #[plugin_fn]
-pub unsafe fn count_vowels<'a>(input: String) -> FnResult<TestOutput> {
+pub fn count_vowels<'a>(input: String) -> FnResult<TestOutput> {
     let mut count = 0;
     for ch in input.chars() {
         if VOWELS.contains(&ch) {
@@ -35,5 +34,6 @@ pub unsafe fn count_vowels<'a>(input: String) -> FnResult<TestOutput> {
         // a,
         // b,
     };
+
     Ok(output)
 }

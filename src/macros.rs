@@ -2,8 +2,7 @@
 macro_rules! log {
     ($lvl:expr, $($arg:tt)+) => {{
         let fmt = format!($($arg)+);
-        let memory = $crate::Memory::from_bytes(&fmt).unwrap();
-        memory.log($lvl)
+        $crate::log($lvl, fmt);
     }}
 }
 
@@ -42,19 +41,15 @@ macro_rules! unwrap {
             Ok(x) => x,
             Err(e) => {
                 let err = format!("{:?}", e);
-                let mut mem = $crate::Memory::from_bytes(&err).unwrap();
-                unsafe {
-                    $crate::extism::error_set(mem.offset());
-                }
-                return -1;
+                $crate::error(err);
             }
         }
     };
 }
 
-#[macro_export]
-macro_rules! set_var {
-    ($k:expr, $($arg:tt)+) => {
-        $crate::var::set($k, &format!($($arg)+))
-    };
-}
+// #[macro_export]
+// macro_rules! set_var {
+//     ($k:expr, $($arg:tt)+) => {
+//         $crate::var::set($k, &format!($($arg)+))
+//     };
+// }

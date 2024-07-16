@@ -11,13 +11,14 @@ struct Output {
     pub count: i32,
 }
 
-#[host_fn("extism:env/user")]
-extern "ExtismHost" {
-    fn hello_world(count: Output) -> Output;
+#[link(wasm_import_module = "extism:host/user")]
+extern "C" {
+    #[link_name = "hello_world"]
+    fn hello_world(count: u64) -> u64;
 }
 
 #[plugin_fn]
-pub unsafe fn count_vowels<'a>(input: String) -> FnResult<Output> {
+pub unsafe fn count_vowels<'a>(input: String) -> FnResult<()> {
     let mut count = 0;
     for ch in input.chars() {
         if VOWELS.contains(&ch) {
@@ -25,7 +26,6 @@ pub unsafe fn count_vowels<'a>(input: String) -> FnResult<Output> {
         }
     }
 
-    let output = Output { count };
-    let output = unsafe { hello_world(output)? };
-    Ok(output)
+    let c = unsafe { hello_world(count as u64) };
+    output(c)
 }

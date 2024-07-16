@@ -1,6 +1,6 @@
 use proc_macro2::{Ident, Span};
 use quote::quote;
-use syn::{parse_macro_input, FnArg, ItemFn, ItemForeignMod};
+use syn::{parse_macro_input, FnArg, ItemFn, ItemForeignMod, Type};
 
 /// `plugin_fn` is used to define an Extism callable function to export
 ///
@@ -242,19 +242,66 @@ pub fn host_fn(
 
             let (output_is_ptr, converted_output) = match output {
                 syn::ReturnType::Default => (false, quote!(())),
-                syn::ReturnType::Type(_, _) => (true, quote!(u64)),
+                syn::ReturnType::Type(_, t) => {
+                    if let Type::Path(t) = &**t {
+                        let is_i32 = t.path.get_ident().is_some_and(|x| x == "i32" || x == "u32");
+                        let is_i64 = t.path.get_ident().is_some_and(|x| x == "i64" || x == "u64");
+                        let is_f32 = t.path.get_ident().is_some_and(|x| x == "f32");
+                        let is_f64 = t.path.get_ident().is_some_and(|x| x == "f64");
+
+                        if is_i32 {
+                            (false, quote!(t))
+                        } else if is_i64 {
+                            (false, quote!(t))
+                        } else if is_f32 {
+                            (false, quote!(t))
+                        } else if is_f64 {
+                            (false, quote!(t))
+                        } else {
+                            (true, quote!(u64))
+                        }
+                    } else {
+                        panic!("Invalid type in host function: {:?}", output)
+                    }
+                }
             };
 
             for input in &original_inputs {
                 match input {
                     syn::FnArg::Typed(t) => {
                         let mut input = t.clone();
-                        input.ty = Box::new(syn::Type::Verbatim(quote!(u64)));
+                        let (is_ptr, ty) = if let Type::Path(t) = &*t.ty {
+                            let is_i32 =
+                                t.path.get_ident().is_some_and(|x| x == "i32" || x == "u32");
+                            let is_i64 =
+                                t.path.get_ident().is_some_and(|x| x == "i64" || x == "u64");
+                            let is_f32 = t.path.get_ident().is_some_and(|x| x == "f32");
+                            let is_f64 = t.path.get_ident().is_some_and(|x| x == "f64");
+
+                            if is_i32 {
+                                (false, quote!(t))
+                            } else if is_i64 {
+                                (false, quote!(t))
+                            } else if is_f32 {
+                                (false, quote!(t))
+                            } else if is_f64 {
+                                (false, quote!(t))
+                            } else {
+                                (true, quote!(u64))
+                            }
+                        } else {
+                            (true, quote!(u64))
+                        };
+                        input.ty = Box::new(syn::Type::Verbatim(ty));
                         converted_inputs.push(syn::FnArg::Typed(input));
                         match &*t.pat {
                             syn::Pat::Ident(i) => {
-                                into_inputs
-                                    .push(quote!(extism_pdk::ToMemory::to_memory(&&#i)?.offset()));
+                                if is_ptr {
+                                    let tmp = quote! { extism_pdk::read_handle(extism_pdk::ToBytes::to_bytes(&#i)?.as_ref()) };
+                                    into_inputs.push(tmp);
+                                } else {
+                                    into_inputs.push(quote!(#i))
+                                }
                             }
                             _ => panic!("invalid host function argument"),
                         }
@@ -271,7 +318,7 @@ pub fn host_fn(
                 #[link(wasm_import_module = #namespace)]
                 extern "C" {
                     #[link_name = #link_name]
-                    fn #impl_name(#(#converted_inputs),*) -> #converted_output;
+                    fn #name(#(#converted_inputs),*) -> #converted_output;
                 }
             };
 
@@ -284,10 +331,12 @@ pub fn host_fn(
                 gen = quote! {
                     #gen
 
-                    #impl_block
+                    mod #impl_name {
+                        #impl_block
+                    }
 
                     #vis unsafe fn #name #generics (#original_inputs) -> Result<#output, extism_pdk::Error> {
-                        let res = extism_pdk::Memory::from(#impl_name(#(#into_inputs),*));
+                        let res = #impl_name::#name(#(#into_inputs),*);
                         <#output as extism_pdk::FromBytes>::from_bytes(&res.to_vec())
                     }
                 };

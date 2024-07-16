@@ -159,11 +159,11 @@ pub fn shared_fn(
         syn::ReturnType::Type(_, t) => {
             if let syn::Type::Path(p) = t.as_ref() {
                 if let Some(t) = p.path.segments.last() {
-                    if t.ident != "SharedFnResult" {
-                        panic!("extism_pdk::shared_fn expects a function that returns extism_pdk::SharedFnResult");
+                    if t.ident != "FnResult" {
+                        panic!("extism_pdk::shared_fn expects a function that returns extism_pdk::FnResult");
                     }
                 } else {
-                    panic!("extism_pdk::shared_fn expects a function that returns extism_pdk::SharedFnResult");
+                    panic!("extism_pdk::shared_fn expects a function that returns extism_pdk::FnResult");
                 }
             };
             (false, quote! {-> u64 })

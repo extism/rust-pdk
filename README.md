@@ -280,6 +280,9 @@ extern "ExtismHost" {
 }
 ```
 
+> **Note**: Under the hood this macro turns this into an interface that passes a pointer as an argument
+> and a pointer as a return. If you want to pass raw, dereferenced wasm values see the raw interface documentation below.
+
 To declare a host function in a specific namespace, pass the module name to the `host_fn` macro:
 
 ```rust

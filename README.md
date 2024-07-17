@@ -280,6 +280,9 @@ extern "ExtismHost" {
 }
 ```
 
+> **Note**: Under the hood this macro turns this into an interface that passes a pointer as an argument
+> and a pointer as a return. If you want to pass raw, dereferenced wasm values see the raw interface documentation below.
+
 To declare a host function in a specific namespace, pass the module name to the `host_fn` macro:
 
 ```rust
@@ -333,6 +336,19 @@ print(result)
 python3 app.py
 # => Hello from Python!
 # => An argument to send to Python!
+```
+
+## Raw Import Interface
+
+Like exports, with imports we do some magic to turn the parameters and returns into pointers for you.
+In some rare situations, you might wish to pass raw wasm values to the host (not pointers).
+If you do, you need to drop down into a raw interface.
+E.g, imagine an interface that sums two i64s
+
+```rust
+extern "C" {
+    fn sum(a: i64, b: i64) -> i64;
+}
 ```
 
 ### Reach Out!

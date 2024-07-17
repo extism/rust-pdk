@@ -335,6 +335,19 @@ python3 app.py
 # => An argument to send to Python!
 ```
 
+## Raw Import Interface
+
+Like exports, with imports we do some magic to turn the parameters and returns into pointers for you.
+In some rare situations, you might wish to pass raw wasm values to the host (not pointers).
+If you do, you need to drop down into a raw interface.
+E.g, imagine an interface that sums two i64s
+
+```rust
+extern "C" {
+    fn sum(a: i64, b: i64) -> i64;
+}
+```
+
 ### Reach Out!
 
 Have a question or just want to drop in and say hi? [Hop on the Discord](https://extism.org/discord)!

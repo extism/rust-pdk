@@ -284,19 +284,67 @@ pub fn host_fn(
 
             let (output_is_ptr, converted_output) = match output {
                 syn::ReturnType::Default => (false, quote!(())),
-                syn::ReturnType::Type(_, _) => (true, quote!(u64)),
+                syn::ReturnType::Type(_, t) => {
+                    if let syn::Type::Path(t) = &**t {
+                        let is_i32 = t.path.get_ident().is_some_and(|x| x == "i32" || x == "u32");
+                        let is_i64 = t.path.get_ident().is_some_and(|x| x == "i64" || x == "u64");
+                        let is_f32 = t.path.get_ident().is_some_and(|x| x == "f32");
+                        let is_f64 = t.path.get_ident().is_some_and(|x| x == "f64");
+
+                        if is_i32 {
+                            (false, quote!(#t))
+                        } else if is_i64 {
+                            (false, quote!(#t))
+                        } else if is_f32 {
+                            (false, quote!(#t))
+                        } else if is_f64 {
+                            (false, quote!(#t))
+                        } else {
+                            (true, quote!(u64))
+                        }
+                    } else {
+                        panic!("Invalid type in host function: {:?}", output)
+                    }
+                }
             };
 
             for input in &original_inputs {
                 match input {
                     syn::FnArg::Typed(t) => {
                         let mut input = t.clone();
-                        input.ty = Box::new(syn::Type::Verbatim(quote!(u64)));
+                        let (is_ptr, ty) = if let syn::Type::Path(t) = &*t.ty {
+                            let is_i32 =
+                                t.path.get_ident().is_some_and(|x| x == "i32" || x == "u32");
+                            let is_i64 =
+                                t.path.get_ident().is_some_and(|x| x == "i64" || x == "u64");
+                            let is_f32 = t.path.get_ident().is_some_and(|x| x == "f32");
+                            let is_f64 = t.path.get_ident().is_some_and(|x| x == "f64");
+
+                            if is_i32 {
+                                (false, quote!(#t))
+                            } else if is_i64 {
+                                (false, quote!(#t))
+                            } else if is_f32 {
+                                (false, quote!(#t))
+                            } else if is_f64 {
+                                (false, quote!(#t))
+                            } else {
+                                (true, quote!(u64))
+                            }
+                        } else {
+                            (true, quote!(u64))
+                        };
+                        input.ty = Box::new(syn::Type::Verbatim(ty));
                         converted_inputs.push(syn::FnArg::Typed(input));
                         match &*t.pat {
                             syn::Pat::Ident(i) => {
-                                into_inputs
-                                    .push(quote!(extism_pdk::ToMemory::to_memory(&&#i)?.offset()));
+                                if is_ptr {
+                                    into_inputs.push(
+                                        quote!(extism_pdk::ToMemory::to_memory(&&#i)?.offset()),
+                                    );
+                                } else {
+                                    into_inputs.push(quote!(#i));
+                                }
                             }
                             _ => panic!("invalid host function argument"),
                         }

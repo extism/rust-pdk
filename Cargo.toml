@@ -28,3 +28,7 @@ members = [
   ".",
   "derive"
 ]
+
+[dev-dependencies]
+image = { version = "0.25.1", default-features=false, features = ["png"] }
+num = "0.4.3"

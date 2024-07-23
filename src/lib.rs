@@ -88,15 +88,18 @@ pub fn input<T: FromBytesOwned>() -> Result<T, Error> {
 }
 
 /// Set output for host
-pub fn write_output(data: &[u8]) {
-    error!("Start writing2");
-    unsafe { extism::output_write(read_handle(data)) };
-    error!("Done writing2");
+pub fn write_output(data: &[u8]) -> Result<(), Error> {
+    let n = unsafe { extism::output_write(read_handle(data)) };
+    if n < 0 {
+        anyhow::bail!("Writing to closed output pipe")
+    }
+
+    Ok(())
 }
 
 pub fn output<'a, T: ToBytes<'a>>(x: T) -> Result<(), Error> {
     let b = x.to_bytes()?;
-    write_output(b.as_ref());
+    write_output(b.as_ref())?;
     Ok(())
 }
 

@@ -183,11 +183,8 @@ pub unsafe extern "C" fn run() {
 
     let mut pixels = vec![0; bounds.0 * bounds.1];
 
-    error!("RENDERING");
     render(&mut pixels, bounds, upper_left, lower_right);
-    error!("DONE RENDERING");
 
     let buf = write_image(&pixels, bounds).expect("error writing PNG file");
-    error!("DONE WRITING");
-    write_output(&buf);
+    unwrap!(write_output(&buf));
 }

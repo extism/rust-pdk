@@ -10,6 +10,7 @@ pub enum Stream {
 extern "C" {
     pub fn read(stream: Stream, handle: Handle) -> i64;
     pub fn write(stream: Stream, handle: Handle) -> i64;
+    pub fn close(stream: Stream);
 
     pub fn stack_push();
     pub fn stack_pop();

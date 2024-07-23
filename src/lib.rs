@@ -103,6 +103,14 @@ pub fn output<'a, T: ToBytes<'a>>(x: T) -> Result<(), Error> {
     Ok(())
 }
 
+pub fn close_output() {
+    unsafe { extism::close(extism::Stream::Output) }
+}
+
+pub fn close_input() {
+    unsafe { extism::close(extism::Stream::Input) }
+}
+
 pub fn error(msg: impl AsRef<str>) -> ! {
     unsafe { extism::error(read_handle(msg.as_ref())) }
 }

@@ -68,7 +68,7 @@ pub struct Base64(pub String);
 
 /// Get input bytes from host
 pub fn read_input(buf: &mut [u8]) -> Option<usize> {
-    let n = unsafe { extism::input_read(write_handle(buf)) };
+    let n = unsafe { extism::read(extism::Stream::Input, write_handle(buf)) };
     if n < 0 {
         return None;
     }
@@ -89,7 +89,7 @@ pub fn input<T: FromBytesOwned>() -> Result<T, Error> {
 
 /// Set output for host
 pub fn write_output(data: &[u8]) -> Result<(), Error> {
-    let n = unsafe { extism::output_write(read_handle(data)) };
+    let n = unsafe { extism::write(extism::Stream::Output, read_handle(data)) };
     if n < 0 {
         anyhow::bail!("Writing to closed output pipe")
     }

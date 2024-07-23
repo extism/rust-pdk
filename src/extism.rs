@@ -1,9 +1,15 @@
 type Handle = u64;
 
+#[repr(u32)]
+pub enum Stream {
+    Input = 0,
+    Output = 1,
+}
+
 #[link(wasm_import_module = "extism:host/env")]
 extern "C" {
-    pub fn input_read(handle: Handle) -> i64;
-    pub fn output_write(handle: Handle) -> i64;
+    pub fn read(stream: Stream, handle: Handle) -> i64;
+    pub fn write(stream: Stream, handle: Handle) -> i64;
 
     pub fn stack_push();
     pub fn stack_pop();

@@ -66,6 +66,14 @@ pub use serde_json as json;
 /// Base64 string
 pub struct Base64(pub String);
 
+pub fn input_length() -> usize {
+    let n = unsafe { extism::bytes_remaining(extism::Stream::Input) };
+    if n < 0 {
+        return 0;
+    }
+    n as usize
+}
+
 /// Get input bytes from host
 pub fn read_input(buf: &mut [u8]) -> Option<usize> {
     let n = unsafe { extism::read(extism::Stream::Input, write_handle(buf)) };

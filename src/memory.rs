@@ -16,7 +16,7 @@ pub mod internal {
     }
 
     pub fn memory_bytes(handle: MemoryHandle) -> Vec<u8> {
-        let mut data = vec![0; handle.offset as usize];
+        let mut data = vec![0; handle.length as usize];
         unsafe { extism::load(handle.offset, &mut data) };
         data
     }

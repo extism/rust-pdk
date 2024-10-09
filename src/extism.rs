@@ -18,6 +18,7 @@ extern "C" {
     pub fn var_set(offs: u64, offs1: u64);
     pub fn http_request(req: u64, body: u64) -> u64;
     pub fn http_status_code() -> i32;
+    pub fn http_headers() -> u64;
     pub fn log_info(offs: u64);
     pub fn log_debug(offs: u64);
     pub fn log_warn(offs: u64);

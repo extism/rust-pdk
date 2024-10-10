@@ -63,8 +63,9 @@ pub fn request<T: ToMemory>(
         HashMap::new()
     } else {
         if let Some(h) = Memory::find(headers) {
-            let Json(h) = h.to()?;
-            h
+            let Json(j) = h.to()?;
+            h.free();
+            j
         } else {
             HashMap::new()
         }

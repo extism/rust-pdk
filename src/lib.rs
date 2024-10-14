@@ -47,6 +47,7 @@ pub enum LogLevel {
     Debug,
     Warn,
     Error,
+    Trace,
 }
 
 /// Re-export of `serde_json`

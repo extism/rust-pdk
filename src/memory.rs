@@ -121,6 +121,7 @@ impl Memory {
                 LogLevel::Debug => extism::log_debug(self.0.offset),
                 LogLevel::Warn => extism::log_warn(self.0.offset),
                 LogLevel::Error => extism::log_error(self.0.offset),
+                LogLevel::Trace => extism::log_trace(self.0.offset),
             }
         }
     }

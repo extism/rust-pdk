@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use crate::*;
 
 /// A HttpResponse is used to wrap the memory returned by
@@ -5,6 +7,7 @@ use crate::*;
 pub struct HttpResponse {
     memory: Memory,
     status: u16,
+    headers: HashMap<String, String>,
 }
 
 impl HttpResponse {
@@ -28,6 +31,14 @@ impl HttpResponse {
         let x = serde_json::from_slice(&self.body())?;
         Ok(x)
     }
+
+    pub fn headers(&self) -> &HashMap<String, String> {
+        &self.headers
+    }
+
+    pub fn header(&self, s: impl AsRef<str>) -> Option<&str> {
+        self.headers.get(s.as_ref()).map(|x| x.as_ref())
+    }
 }
 
 /// Execute `HttpRequest`, if `body` is not `None` then it will be sent as the
@@ -46,11 +57,26 @@ pub fn request<T: ToMemory>(
     let offs = unsafe { extism::http_request(req.offset(), data) };
     let status = unsafe { extism::http_status_code() };
     let len = unsafe { extism::length_unsafe(offs) };
+
+    let headers = unsafe { extism::http_headers() };
+    let headers = if headers == 0 {
+        HashMap::new()
+    } else {
+        if let Some(h) = Memory::find(headers) {
+            let Json(j) = h.to()?;
+            h.free();
+            j
+        } else {
+            HashMap::new()
+        }
+    };
+
     Ok(HttpResponse {
         memory: Memory(MemoryHandle {
             offset: offs,
             length: len,
         }),
         status: status as u16,
+        headers,
     })
 }

@@ -32,3 +32,6 @@ jobs:
 
           TEST=$(extism call test/http.wasm http_get --allow-host '*' --input '{"url": "https://jsonplaceholder.typicode.com/todos/1"}')
           echo $TEST | grep '"userId": 1'
+
+          TEST=$(extism call test/host_function.wasm count_vowels --link extism:host/user=test/host_function_host.wasm --input "this is a test" --set-config='{"thing": "1", "a": "b"}')
+          echo $TEST | grep '"count":40'

@@ -11,7 +11,7 @@ struct Output {
     pub count: i32,
 }
 
-#[host_fn("extism:env/user")]
+#[host_fn("extism:host/user")]
 extern "ExtismHost" {
     fn hello_world(count: Output) -> Output;
 }

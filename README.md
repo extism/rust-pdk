@@ -2,7 +2,8 @@
 
 [![crates.io](https://img.shields.io/crates/v/extism_pdk.svg)](https://crates.io/crates/extism-pdk)
 
-This library can be used to write [Extism Plug-ins](https://extism.org/docs/concepts/plug-in) in Rust.
+This library can be used to write
+[Extism Plug-ins](https://extism.org/docs/concepts/plug-in) in Rust.
 
 ## Install
 
@@ -18,7 +19,9 @@ Add the library from [crates.io](https://crates.io/crates/extism-pdk).
 cargo add extism-pdk
 ```
 
-Change your `Cargo.toml` to set the crate-type to `cdylib` (this instructs the compiler to produce a dynamic library, which for our target will be a Wasm binary):
+Change your `Cargo.toml` to set the crate-type to `cdylib` (this instructs the
+compiler to produce a dynamic library, which for our target will be a Wasm
+binary):
 
 ```toml
 [lib]
@@ -27,7 +30,9 @@ crate_type = ["cdylib"]
 
 ### Rustup and wasm32-unknown-unknown installation
 
-Our example below will use the `wasm32-unknown-unknown` target. If this is not installed you will need to do so before this example will build. The easiest way to do this is use [`rustup`](https://rustup.rs/).
+Our example below will use the `wasm32-unknown-unknown` target. If this is not
+installed you will need to do so before this example will build. The easiest way
+to do this is use [`rustup`](https://rustup.rs/).
 
 ```bash
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
@@ -39,11 +44,15 @@ Once `rustup` is installed, add the `wasm32-unknown-unknown` target:
 rustup target add wasm32-unknown-unknown
 ```
 
-
 ## Getting Started
 
-The goal of writing an [Extism plug-in](https://extism.org/docs/concepts/plug-in) is to compile your Rust code to a Wasm module with exported functions that the host application can invoke. The first thing you should understand is creating an export. Let's write a simple program that exports a `greet` function which will take a name as a string and return a greeting string. For this, we use the `#[plugin_fn]` macro on our exported function:
-
+The goal of writing an
+[Extism plug-in](https://extism.org/docs/concepts/plug-in) is to compile your
+Rust code to a Wasm module with exported functions that the host application can
+invoke. The first thing you should understand is creating an export. Let's write
+a simple program that exports a `greet` function which will take a name as a
+string and return a greeting string. For this, we use the `#[plugin_fn]` macro
+on our exported function:
 
 ```rust
 use extism_pdk::*;
@@ -54,20 +63,23 @@ pub fn greet(name: String) -> FnResult<String> {
 }
 ```
 
-Since we don't need any system access for this, we can compile this to the lightweight `wasm32-unknown-unknown` target instead of using the `wasm32-wasi` target:
+Since we don't need any system access for this, we can compile this to the
+lightweight `wasm32-unknown-unknown` target instead of using the `wasm32-wasi`
+target:
 
 ```bash
 cargo build --target wasm32-unknown-unknown
 ```
 
 > **Note**: You can also put a default target in `.cargo/config.toml`:
+
 ```toml
 [build]
 target = "wasm32-unknown-unknown"
 ```
 
-This will put your compiled wasm in `target/wasm32-unknown-unknown/debug`.
-We can now test it using the [Extism CLI](https://github.com/extism/cli)'s `run`
+This will put your compiled wasm in `target/wasm32-unknown-unknown/debug`. We
+can now test it using the [Extism CLI](https://github.com/extism/cli)'s `run`
 command:
 
 ```bash
@@ -75,18 +87,30 @@ extism call target/wasm32-unknown-unknown/debug/my_plugin.wasm greet --input "Be
 # => Hello, Benjamin!
 ```
 
-> **Note**: We also have a web-based, plug-in tester called the [Extism Playground](https://playground.extism.org/)
+> **Note**: We also have a web-based, plug-in tester called the
+> [Extism Playground](https://playground.extism.org/)
 
 ### More About Exports
 
-Adding the [plugin_fn](https://docs.rs/extism-pdk/latest/extism_pdk/attr.plugin_fn.html) macro to your function does a couple things. It exposes your function as an export and it handles some of the lower level ABI details that allow you to declare your Wasm function as if it were a normal Rust function. Here are a few examples of exports you can define.
+Adding the
+[plugin_fn](https://docs.rs/extism-pdk/latest/extism_pdk/attr.plugin_fn.html)
+macro to your function does a couple things. It exposes your function as an
+export and it handles some of the lower level ABI details that allow you to
+declare your Wasm function as if it were a normal Rust function. Here are a few
+examples of exports you can define.
 
 ### Primitive Types
 
-A common thing you may want to do is pass some primitive Rust data back and forth.
-The [plugin_fn](https://docs.rs/extism-pdk/latest/extism_pdk/attr.plugin_fn.html) macro can map these types for you:
+A common thing you may want to do is pass some primitive Rust data back and
+forth. The
+[plugin_fn](https://docs.rs/extism-pdk/latest/extism_pdk/attr.plugin_fn.html)
+macro can map these types for you:
 
-> **Note**: The [plugin_fn](https://docs.rs/extism-pdk/latest/extism_pdk/attr.plugin_fn.html) macro uses the [convert crate](https://github.com/extism/extism/tree/main/convert) to automatically convert and pass types across the guest / host boundary.
+> **Note**: The
+> [plugin_fn](https://docs.rs/extism-pdk/latest/extism_pdk/attr.plugin_fn.html)
+> macro uses the
+> [convert crate](https://github.com/extism/extism/tree/main/convert) to
+> automatically convert and pass types across the guest / host boundary.
 
 ```rust
 // f32 and f64
@@ -118,9 +142,10 @@ pub fn process_string(input: String) -> FnResult<String> {
 
 ### Json
 
-We provide a [Json](https://docs.rs/extism-pdk/latest/extism_pdk/struct.Json.html) type that allows you to pass structs
-that implement serde::Deserialize as parameters and serde::Serialize
-as returns:
+We provide a
+[Json](https://docs.rs/extism-pdk/latest/extism_pdk/struct.Json.html) type that
+allows you to pass structs that implement serde::Deserialize as parameters and
+serde::Serialize as returns:
 
 ```rust
 #[derive(serde::Deserialize)]
@@ -165,8 +190,9 @@ pub fn add(add: Add) -> FnResult<Sum> {
 
 ### Raw Export Interface
 
-[plugin_fn](https://docs.rs/extism-pdk/latest/extism_pdk/attr.plugin_fn.html) is a nice macro abstraction but there may be times where you want more control. You can code directly to the raw ABI interface of export functions.
-
+[plugin_fn](https://docs.rs/extism-pdk/latest/extism_pdk/attr.plugin_fn.html) is
+a nice macro abstraction but there may be times where you want more control. You
+can code directly to the raw ABI interface of export functions.
 
 ```rust
 #[no_mangle]
@@ -181,7 +207,8 @@ pub unsafe extern "C" fn greet() -> i32 {
 ## Configs
 
 Configs are key-value pairs that can be passed in by the host when creating a
-plug-in. These can be useful to statically configure the plug-in with some data that exists across every function call. Here is a trivial example:
+plug-in. These can be useful to statically configure the plug-in with some data
+that exists across every function call. Here is a trivial example:
 
 ```rust
 #[plugin_fn]
@@ -191,7 +218,8 @@ pub fn greet() -> FnResult<String> {
 }
 ```
 
-To test it, the [Extism CLI](https://github.com/extism/cli) has a `--config` option that lets you pass in `key=value` pairs:
+To test it, the [Extism CLI](https://github.com/extism/cli) has a `--config`
+option that lets you pass in `key=value` pairs:
 
 ```bash
 extism call my_plugin.wasm greet --config user=Benjamin
@@ -202,7 +230,10 @@ extism call my_plugin.wasm greet --config user=Benjamin
 
 Variables are another key-value mechanism but it's a mutable data store that
 will persist across function calls. These variables will persist as long as the
-host has loaded and not freed the plug-in. You can use [var::get](https://docs.rs/extism-pdk/latest/extism_pdk/var/fn.get.html) and [var::set](https://docs.rs/extism-pdk/latest/extism_pdk/var/fn.set.html) to manipulate them.
+host has loaded and not freed the plug-in. You can use
+[var::get](https://docs.rs/extism-pdk/latest/extism_pdk/var/fn.get.html) and
+[var::set](https://docs.rs/extism-pdk/latest/extism_pdk/var/fn.set.html) to
+manipulate them.
 
 ```rust
 #[plugin_fn]
@@ -216,7 +247,12 @@ pub fn count() -> FnResult<i64> {
 
 ## Logging
 
-Because Wasm modules by default do not have access to the system, printing to stdout won't work (unless you use WASI). Extism provides some simple logging macros that allow you to use the host application to log without having to give the plug-in permission to make syscalls. The primary one is [log!](https://docs.rs/extism-pdk/latest/extism_pdk/macro.log.html) but we also have some convenience macros named by log level:
+Because Wasm modules by default do not have access to the system, printing to
+stdout won't work (unless you use WASI). Extism provides some simple logging
+macros that allow you to use the host application to log without having to give
+the plug-in permission to make syscalls. The primary one is
+[log!](https://docs.rs/extism-pdk/latest/extism_pdk/macro.log.html) but we also
+have some convenience macros named by log level:
 
 ```rust
 #[plugin_fn]
@@ -243,13 +279,17 @@ extism call my_plugin.wasm log_stuff --log-level=info
 2023/09/30 11:52:17 An error!
 ```
 
-> *Note*: From the CLI you need to pass a level with `--log-level`. If you are running the plug-in in your own host using one of our SDKs, you need to make sure that you call `set_log_file` to `"stdout"` or some file location.
+> _Note_: From the CLI you need to pass a level with `--log-level`. If you are
+> running the plug-in in your own host using one of our SDKs, you need to make
+> sure that you call `set_log_file` to `"stdout"` or some file location.
 
 ## HTTP
 
 Sometimes it is useful to let a plug-in make HTTP calls.
 
-> **Note**: See [HttpRequest](https://docs.rs/extism-pdk/latest/extism_pdk/struct.HttpRequest.html) docs for more info on the request and response types:
+> **Note**: See
+> [HttpRequest](https://docs.rs/extism-pdk/latest/extism_pdk/struct.HttpRequest.html)
+> docs for more info on the request and response types:
 
 ```rust
 #[plugin_fn]
@@ -261,17 +301,22 @@ pub fn http_get(Json(req): Json<HttpRequest>) -> FnResult<Vec<u8>> {
 
 ## Imports (Host Functions)
 
-Like any other code module, Wasm not only let's you export functions to the outside world, you can
-import them too. Host Functions allow a plug-in to import functions defined in the host. For example,
-if you host application is written in Python, it can pass a Python function down to your Rust plug-in
-where you can invoke it.
+Like any other code module, Wasm not only let's you export functions to the
+outside world, you can import them too. Host Functions allow a plug-in to import
+functions defined in the host. For example, if you host application is written
+in Python, it can pass a Python function down to your Rust plug-in where you can
+invoke it.
 
-This topic can get fairly complicated and we have not yet fully abstracted the Wasm knowledge you need
-to do this correctly. So we recommend reading out [concept doc on Host Functions](https://extism.org/docs/concepts/host-functions) before you get started.
+This topic can get fairly complicated and we have not yet fully abstracted the
+Wasm knowledge you need to do this correctly. So we recommend reading out
+[concept doc on Host Functions](https://extism.org/docs/concepts/host-functions)
+before you get started.
 
 ### A Simple Example
 
-Host functions have a similar interface as exports. You just need to declare them as `extern` on the top of your `lib.rs`. You only declare the interface as it is the host's responsibility to provide the implementation:
+Host functions have a similar interface as exports. You just need to declare
+them as `extern` on the top of your `lib.rs`. You only declare the interface as
+it is the host's responsibility to provide the implementation:
 
 ```rust
 #[host_fn]
@@ -280,20 +325,23 @@ extern "ExtismHost" {
 }
 ```
 
-> **Note**: Under the hood this macro turns this into an interface that passes a pointer as an argument
-> and a pointer as a return. If you want to pass raw, dereferenced wasm values see the raw interface documentation below.
+> **Note**: Under the hood this macro turns this into an interface that passes a
+> pointer as an argument and a pointer as a return. If you want to pass raw,
+> dereferenced wasm values see the raw interface documentation below.
 
-To declare a host function in a specific namespace, pass the module name to the `host_fn` macro:
+To declare a host function in a specific namespace, pass the module name to the
+`host_fn` macro:
 
 ```rust
 #[host_fn("extism:host/user")]
 ```
 
-> **Note**: The types we accept here are the same as the exports as the interface also uses the [convert crate](https://docs.rs/extism-convert/latest/extism_convert/).
+> **Note**: The types we accept here are the same as the exports as the
+> interface also uses the
+> [convert crate](https://docs.rs/extism-convert/latest/extism_convert/).
 
-To call this function, we must use the `unsafe` keyword. Also note that it automatically wraps the
-function return with a Result in case the call fails.
-
+To call this function, we must use the `unsafe` keyword. Also note that it
+automatically wraps the function return with a Result in case the call fails.
 
 ```rust
 #[plugin_fn]
@@ -305,8 +353,10 @@ pub fn hello_from_python() -> FnResult<String> {
 
 ### Testing it out
 
-We can't really test this from the Extism CLI as something must provide the implementation. So let's
-write out the Python side here. Check out the [docs for Host SDKs](https://extism.org/docs/concepts/host-sdk) to implement a host function in a language of your choice.
+We can't really test this from the Extism CLI as something must provide the
+implementation. So let's write out the Python side here. Check out the
+[docs for Host SDKs](https://extism.org/docs/concepts/host-sdk) to implement a
+host function in a language of your choice.
 
 ```python
 from extism import host_fn, Plugin
@@ -324,7 +374,7 @@ def a_python_func(input: str) -> str:
 ```
 
 Now when we load the plug-in we pass the host function:
- 
+
 ```python
 manifest = {"wasm": [{"path": "/path/to/plugin.wasm"}]}
 plugin = Plugin(manifest, functions=[a_python_func], wasi=True)
@@ -340,10 +390,10 @@ python3 app.py
 
 ## Raw Import Interface
 
-Like exports, with imports we do some magic to turn the parameters and returns into pointers for you.
-In some rare situations, you might wish to pass raw wasm values to the host (not pointers).
-If you do, you need to drop down into a raw interface.
-E.g, imagine an interface that sums two i64s
+Like exports, with imports we do some magic to turn the parameters and returns
+into pointers for you. In some rare situations, you might wish to pass raw wasm
+values to the host (not pointers). If you do, you need to drop down into a raw
+interface. E.g, imagine an interface that sums two i64s
 
 ```rust
 extern "C" {
@@ -351,6 +401,74 @@ extern "C" {
 }
 ```
 
-### Reach Out!
+## Generating Bindings
 
-Have a question or just want to drop in and say hi? [Hop on the Discord](https://extism.org/discord)!
+It's often very useful to define a schema to describe the function signatures
+and types you want to use between Extism SDK and PDK languages.
+
+[XTP Bindgen](https://github.com/dylibso/xtp-bindgen) is an open source
+framework to generate PDK bindings for Extism plug-ins. It's used by the
+[XTP Platform](https://www.getxtp.com/), but can be used outside of the platform
+to define any Extism compatible plug-in system.
+
+### 1. Install the `xtp` CLI.
+
+See installation instructions
+[here](https://docs.xtp.dylibso.com/docs/cli#installation).
+
+### 2. Create a schema using our OpenAPI-inspired IDL:
+
+```yaml
+version: v1-draft
+exports: 
+  CountVowels:
+      input: 
+          type: string
+          contentType: text/plain; charset=utf-8
+      output:
+          $ref: "#/components/schemas/VowelReport"
+          contentType: application/json
+# components.schemas defined in example-schema.yaml...
+```
+
+> See an example in [example-schema.yaml](./example-schema.yaml), or a full
+> "kitchen sink" example on
+> [the docs page](https://docs.xtp.dylibso.com/docs/concepts/xtp-schema/).
+
+### 3. Generate bindings to use from your plugins:
+
+```
+xtp plugin init --schema-file ./example-schema.yaml
+    1. TypeScript                      
+    2. Go                              
+  > 3. Rust                            
+    4. Python                          
+    5. C#                              
+    6. Zig                             
+    7. C++                             
+    8. GitHub Template                 
+    9. Local Template
+```
+
+This will create an entire boilerplate plugin project for you to get started
+with:
+
+```rust
+// returns VowelReport (The result of counting vowels on the Vowels input.)
+pub(crate) fn count_vowels(input: String ) -> Result<VowelReport, Error> {
+	todo!("Implement count_vowels")
+}
+```
+
+Implement the empty function(s), and run `xtp plugin build` to compile your
+plugin.
+
+> For more information about XTP Bindgen, see the
+> [dylibso/xtp-bindgen](https://github.com/dylibso/xtp-bindgen) repository and
+> the official
+> [XTP Schema documentation](https://docs.xtp.dylibso.com/docs/concepts/xtp-schema).
+
+## Reach Out!
+
+Have a question or just want to drop in and say hi?
+[Hop on the Discord](https://extism.org/discord)!

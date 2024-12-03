@@ -25,6 +25,7 @@ extern "C" {
     pub fn log_error(offs: u64);
     pub fn log_trace(offs: u64);
     pub fn get_log_level() -> i32;
+    pub fn host_func_get_error() -> u64;
 }
 
 /// Loads a byte array from Extism's memory. Only use this if you

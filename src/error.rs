@@ -2,7 +2,7 @@ use crate::*;
 
 /// Checks to see if the most recent host function call returned an error.
 pub fn get_host_func_error() -> Result<(), Error> {
-    let offset = unsafe { extism::host_func_get_error() };
+    let offset = unsafe { extism::error_get() };
     if offset == 0 {
         return Ok(());
     }

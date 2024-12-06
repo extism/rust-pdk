@@ -41,6 +41,9 @@ pub fn get_host_func_error() -> Result<(), Error> {
         return Ok(());
     }
 
+    // We need to reset the error now that we've read it
+    unsafe { extism::error_set(0) };
+
     if let Some(mem) = Memory::find(offset).map(|mem| mem.to_vec()) {
         let message = if let Some(prefix) = HOST_FUNC_ERROR_PREFIX.as_ref() {
             // Attempt to strip the sentinel prefix for host function errors

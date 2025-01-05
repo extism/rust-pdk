@@ -396,6 +396,7 @@ values to the host (not pointers). If you do, you need to drop down into a raw
 interface. E.g, imagine an interface that sums two i64s
 
 ```rust
+#[link(wasm_import_module = "extism:host/user")]
 extern "C" {
     fn sum(a: i64, b: i64) -> i64;
 }

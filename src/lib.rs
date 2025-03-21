@@ -23,7 +23,7 @@ pub use anyhow::Error;
 pub use extism_convert::*;
 pub use extism_convert::{FromBytes, FromBytesOwned, ToBytes};
 pub use extism_pdk_derive::{host_fn, plugin_fn, shared_fn};
-pub use memory::{Memory, MemoryPointer};
+pub use memory::{ManagedMemory, Memory, MemoryPointer};
 pub use to_memory::ToMemory;
 
 #[cfg(feature = "http")]

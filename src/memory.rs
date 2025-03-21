@@ -2,6 +2,8 @@ use crate::*;
 
 pub struct Memory(pub MemoryHandle);
 
+pub struct ManagedMemory(pub Memory);
+
 pub mod internal {
     use super::*;
 
@@ -193,5 +195,43 @@ impl<T: FromBytesOwned> MemoryPointer<T> {
             Some(mem) => T::from_bytes_owned(&mem.to_vec()),
             None => anyhow::bail!("Invalid pointer offset {}", self.0),
         }
+    }
+}
+
+impl Drop for ManagedMemory {
+    fn drop(&mut self) {
+        internal::memory_free((self.0).0)
+    }
+}
+
+impl ManagedMemory {
+    pub fn new(mem: Memory) -> Self {
+        ManagedMemory(mem)
+    }
+
+    pub fn offset(&self) -> u64 {
+        self.0.offset()
+    }
+
+    pub fn len(&self) -> usize {
+        self.0.len()
+    }
+}
+
+impl From<Memory> for ManagedMemory {
+    fn from(value: Memory) -> Self {
+        ManagedMemory(value)
+    }
+}
+
+impl AsRef<Memory> for ManagedMemory {
+    fn as_ref(&self) -> &Memory {
+        &self.0
+    }
+}
+
+impl AsMut<Memory> for ManagedMemory {
+    fn as_mut(&mut self) -> &mut Memory {
+        &mut self.0
     }
 }

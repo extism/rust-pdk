@@ -296,7 +296,9 @@ pub fn host_fn(
                         match &*t.pat {
                             syn::Pat::Ident(i) => {
                                 into_inputs
-                                    .push(quote!(extism_pdk::ToMemory::to_memory(&&#i)?.offset()));
+                                    .push(quote!(
+                                        extism_pdk::ManagedMemory::from(extism_pdk::ToMemory::to_memory(&&#i)?).offset()
+                                    ));
                             }
                             _ => panic!("invalid host function argument"),
                         }

@@ -25,7 +25,7 @@ binary):
 
 ```toml
 [lib]
-crate_type = ["cdylib"]
+crate-type = ["cdylib"]
 ```
 
 ### Rustup and wasm32-unknown-unknown installation
@@ -64,7 +64,7 @@ pub fn greet(name: String) -> FnResult<String> {
 ```
 
 Since we don't need any system access for this, we can compile this to the
-lightweight `wasm32-unknown-unknown` target instead of using the `wasm32-wasi`
+lightweight `wasm32-unknown-unknown` target instead of using the `wasm32-wasip1`
 target:
 
 ```bash

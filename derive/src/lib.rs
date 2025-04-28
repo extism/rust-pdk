@@ -332,6 +332,7 @@ pub fn host_fn(
 
                     #vis unsafe fn #name #generics (#original_inputs) -> Result<#output, extism_pdk::Error> {
                         let res = extism_pdk::Memory::from(#impl_name(#(#into_inputs),*));
+                        extism_pdk::get_host_func_error()?;
                         <#output as extism_pdk::FromBytes>::from_bytes(&res.to_vec())
                     }
                 };
@@ -343,6 +344,7 @@ pub fn host_fn(
 
                     #vis unsafe fn #name #generics (#original_inputs) -> Result<#output, extism_pdk::Error> {
                         let res = #impl_name(#(#into_inputs),*);
+                        extism_pdk::get_host_func_error()?;
                         Ok(res)
                     }
                 };

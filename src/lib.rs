@@ -19,6 +19,10 @@ pub mod var;
 /// Types and functions for making HTTP requests
 pub mod http;
 
+/// Functions and utilities for working with host function errors
+mod error;
+pub use error::get_host_func_error;
+
 pub use anyhow::Error;
 pub use extism_convert::*;
 pub use extism_convert::{FromBytes, FromBytesOwned, ToBytes};

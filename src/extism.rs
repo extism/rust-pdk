@@ -9,6 +9,7 @@ extern "C" {
     pub fn free(offs: u64);
     pub fn output_set(offs: u64, length: u64);
     pub fn error_set(offs: u64);
+    pub fn error_get() -> u64;
     pub fn store_u8(offs: u64, data: u8);
     pub fn load_u8(offs: u64) -> u8;
     pub fn store_u64(offs: u64, data: u64);

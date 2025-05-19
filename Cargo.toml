@@ -1,6 +1,6 @@
 [package]
 name = "extism-pdk"
-version = "1.4.0"
+version = "1.4.1"
 edition = "2021"
 authors = ["The Extism Authors", "oss@extism.org"]
 license = "BSD-3-Clause"
@@ -12,7 +12,7 @@ description = "Extism Plug-in Development Kit (PDK) for Rust"
 anyhow = "1"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-extism-pdk-derive = { path = "./derive", version = "1.4.0" }
+extism-pdk-derive = { path = "./derive", version = "1.4.1" }
 extism-manifest = { version = "1.10.0", optional = true }
 extism-convert = { version = "1.10.0", features = ["extism-pdk-path"] }
 base64 = "0.22.1"

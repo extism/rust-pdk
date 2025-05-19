@@ -73,8 +73,8 @@ pub fn plugin_fn(
                 }
 
                 let output = match inner() {
-                    Ok(x) => x,
-                    Err(rc) => {
+                    core::result::Result::Ok(x) => x,
+                    core::result::Result::Err(rc) => {
                         let err = format!("{:?}", rc.0);
                         let mut mem = extism_pdk::Memory::from_bytes(&err).unwrap();
                         unsafe {
@@ -98,8 +98,8 @@ pub fn plugin_fn(
 
                 let input = extism_pdk::unwrap!(extism_pdk::input());
                 let output = match inner(input) {
-                    Ok(x) => x,
-                    Err(rc) => {
+                    core::result::Result::Ok(x) => x,
+                    core::result::Result::Err(rc) => {
                         let err = format!("{:?}", rc.0);
                         let mut mem = extism_pdk::Memory::from_bytes(&err).unwrap();
                         unsafe {
@@ -238,10 +238,10 @@ pub fn shared_fn(
 
                 let r = || inner(#(#raw_args,)*);
                 match r().and_then(|x| extism_pdk::Memory::new(&x)) {
-                    Ok(mem) => {
+                    core::result::Result::Ok(mem) => {
                         mem.offset()
                     },
-                    Err(rc) => {
+                    core::result::Result::Err(rc) => {
                         panic!("{}", rc.to_string());
                     }
                 }
@@ -330,7 +330,7 @@ pub fn host_fn(
 
                     #impl_block
 
-                    #vis unsafe fn #name #generics (#original_inputs) -> Result<#output, extism_pdk::Error> {
+                    #vis unsafe fn #name #generics (#original_inputs) -> core::result::Result<#output, extism_pdk::Error> {
                         let res = extism_pdk::Memory::from(#impl_name(#(#into_inputs),*));
                         <#output as extism_pdk::FromBytes>::from_bytes(&res.to_vec())
                     }
@@ -341,9 +341,9 @@ pub fn host_fn(
 
                     #impl_block
 
-                    #vis unsafe fn #name #generics (#original_inputs) -> Result<#output, extism_pdk::Error> {
+                    #vis unsafe fn #name #generics (#original_inputs) -> core::result::Result<#output, extism_pdk::Error> {
                         let res = #impl_name(#(#into_inputs),*);
-                        Ok(res)
+                        core::result::Result::Ok(res)
                     }
                 };
             }

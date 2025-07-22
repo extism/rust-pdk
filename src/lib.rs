@@ -3,9 +3,9 @@
 #[cfg(target_arch = "wasm32")]
 pub use std::arch::wasm32::v128;
 
-mod macros;
-
 pub mod extism;
+mod logging;
+mod macros;
 pub mod memory;
 mod to_memory;
 
@@ -21,8 +21,8 @@ pub mod http;
 
 pub use anyhow::Error;
 pub use extism_convert::*;
-pub use extism_convert::{FromBytes, FromBytesOwned, ToBytes};
 pub use extism_pdk_derive::{host_fn, plugin_fn, shared_fn};
+pub use logging::*;
 pub use memory::{ManagedMemory, Memory, MemoryPointer};
 pub use to_memory::ToMemory;
 
@@ -39,28 +39,6 @@ pub type FnResult<T> = Result<T, WithReturnCode<Error>>;
 
 /// The return type of a `shared_fn`
 pub type SharedFnResult<T> = Result<T, Error>;
-
-/// Logging levels
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum LogLevel {
-    Trace,
-    Debug,
-    Info,
-    Warn,
-    Error,
-}
-
-impl LogLevel {
-    pub const fn to_int(self) -> i32 {
-        match self {
-            LogLevel::Trace => 0,
-            LogLevel::Debug => 1,
-            LogLevel::Info => 2,
-            LogLevel::Warn => 3,
-            LogLevel::Error => 4,
-        }
-    }
-}
 
 /// Re-export of `serde_json`
 pub use serde_json as json;

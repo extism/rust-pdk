@@ -1,12 +1,7 @@
 #[macro_export]
 macro_rules! log {
     ($lvl:expr, $($arg:tt)+) => {{
-        let level = unsafe { $crate::extism::get_log_level() };
-        if $lvl.to_int() >= level && level != i32::MAX  {
-            let fmt = format!($($arg)+);
-            let memory = $crate::Memory::from_bytes(&fmt).unwrap();
-            memory.log($lvl)
-        }
+        $crate::log($lvl, format!($($arg)+)).unwrap();
     }}
 }
 

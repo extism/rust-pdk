@@ -24,7 +24,4 @@ msgpack = ["extism-convert/msgpack"]
 protobuf = ["extism-convert/protobuf"]
 
 [workspace]
-members = [
-  ".",
-  "derive"
-]
+members = [".", "derive"]

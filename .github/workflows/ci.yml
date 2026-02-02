@@ -35,3 +35,7 @@ jobs:
 
           TEST=$(extism call test/host_function.wasm count_vowels --link extism:host/user=test/host_function_host.wasm --input "this is a test" --set-config='{"thing": "1", "a": "b"}')
           echo $TEST | grep '"count":40'
+
+          # Test unsafe extern with safe fn (Rust 1.82+ syntax)
+          TEST=$(extism call test/host_function_safe.wasm count_vowels --link extism:host/user=test/host_function_host.wasm --input "this is a test" --set-config='{"thing": "1", "a": "b"}')
+          echo $TEST | grep '"count":40'
